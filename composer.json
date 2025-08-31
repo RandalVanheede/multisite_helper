@@ -1,0 +1,14 @@
+{
+    "name": "RandalVanheede/multisite_helper",
+    "type": "drupal-module",
+    "authors": [
+        {
+            "name": "Randal Vanheede",
+            "email": "randalvanheede@duck.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "drupal/single_content_sync": "^1.4.0"
+    }
+}

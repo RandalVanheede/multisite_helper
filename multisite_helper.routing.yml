@@ -1,0 +1,16 @@
+multisite_helper.settings:
+  path: '/admin/config/system/multisite-helper'
+  defaults:
+    _form: 'Drupal\multisite_helper\Form\MultisiteHelperSettingsForm'
+    _title: 'Multisite Helper: Settings'
+  requirements:
+    _permission: 'administer multisite helper'
+
+multisite_helper.receive:
+  path: '/api/multisite-helper/sync-data/{plugin_id}'
+  defaults:
+    _controller: 'Drupal\multisite_helper\Controller\MultisiteHelperController::receive'
+    _title: 'Receive plugin data'
+  requirements:
+    _custom_access: 'Drupal\multisite_helper\Controller\MultisiteHelperController::apiKeyAccess'
+  methods: [PUT, POST, DELETE]

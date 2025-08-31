@@ -1,0 +1,8 @@
+name: 'Multisite Helper - Content'
+description: 'Allows managing and synchronizing content across multisites'
+package: 'Multisite'
+type: module
+core_version_requirement: ^10.4 || ^11.1
+configure: multisite_helper.settings
+dependencies:
+  - multisite_helper:multisite_helper

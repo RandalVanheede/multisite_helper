@@ -1,0 +1,5 @@
+multisite_helper.settings:
+  title: 'Multisite Helper settings'
+  description: 'Manage Multisite Helper settings for your site'
+  parent: system.admin_config_system
+  route_name: multisite_helper.settings

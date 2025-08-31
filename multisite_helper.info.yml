@@ -1,0 +1,8 @@
+name: 'Multisite Helper'
+description: 'Adds a lot of functionality to support multisites'
+package: 'Multisite'
+type: module
+core_version_requirement: ^10.4 || ^11.1
+configure: multisite_helper.settings
+dependencies:
+  - single_content_sync:single_content_sync
