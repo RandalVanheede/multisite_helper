@@ -2,14 +2,18 @@
 
 namespace Drupal\multisite_helper;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\RequestOptions;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\ResponseInterface;
 
 class MultisiteHelper implements MultisiteHelperInterface {
 
@@ -23,6 +27,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     private readonly LoggerChannelFactoryInterface $loggerChannelFactory,
     private readonly MessengerInterface $messenger,
     private readonly ClientInterface $httpClient,
+    private readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -97,46 +102,20 @@ class MultisiteHelper implements MultisiteHelperInterface {
     $plugin_id_copy = $plugin_id;
     $this->moduleHandler->alter('multisite_helper_plugin_data', $data, $sites, $plugin_id_copy);
 
-    $result = TRUE;
+    $requests = [];
     foreach ($sites as $hostname) {
-      try {
-        $response = $this->httpClient->post(
-          uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
-          options: [
-            RequestOptions::HEADERS => [
-              'Content-Type' => 'application/json',
-              'X-Api-Key' => static::getSetting('api_key'),
-            ],
-            RequestOptions::JSON => $data,
-          ],
-        );
-      }
-      catch (\Exception|GuzzleException $e) {
-        // Log a user friendly message.
-        $this->messenger
-          ->addError('Something went wrong while syncing data to subsite.');
-
-        // Then log debugging data.
-        $this->loggerChannelFactory
-          ->get('multisite_helper')
-          ->debug($e->getMessage());
-
-        $result = FALSE;
-        continue;
-      }
-
-      if ($response->getStatusCode() > 299 || $response->getStatusCode() < 200) {
-        $this->loggerChannelFactory
-          ->get('multisite_helper')
-          ->error('Something went wrong while syncing data to subsite.');
-      }
+      $requests[$hostname] = new Request(
+        method: 'POST',
+        uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
+        headers: [
+          'Content-Type' => 'application/json',
+          'X-Api-Key' => static::getSetting('api_key'),
+        ],
+        body: Json::encode($data),
+      );
     }
 
-    $this->loggerChannelFactory
-      ->get('multisite_helper')
-      ->info($this->t('The @plugin_id item has been processed.', ['@plugin_id' => $plugin_id]));
-
-    return $result;
+    return $this->sendAsyncRequests($plugin_id_copy, $requests);
   }
 
   /**
@@ -147,39 +126,55 @@ class MultisiteHelper implements MultisiteHelperInterface {
     $plugin_id_copy = $plugin_id;
     $this->moduleHandler->alter('multisite_helper_plugin_data', $data, $sites, $plugin_id_copy);
 
-    $result = TRUE;
+    $requests = [];
     foreach ($sites as $hostname) {
-      try {
-        $response = $this->httpClient->delete(
-          uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
-          options: [
-            RequestOptions::HEADERS => [
-              'Content-Type' => 'application/json',
-              'X-Api-Key' => static::getSetting('api_key'),
-            ],
-            RequestOptions::JSON => $data,
-          ],
-        );
-      }
-      catch (\Exception|GuzzleException $e) {
-        // Log a user friendly message.
-        $this->messenger
-          ->addError('Something went wrong while syncing data to subsite.');
+      $requests[$hostname] = new Request(
+        method: 'DELETE',
+        uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
+        headers: [
+          'Content-Type' => 'application/json',
+          'X-Api-Key' => static::getSetting('api_key'),
+        ],
+        body: Json::encode($data),
+      );
+    }
 
-        // Then log debugging data.
-        $this->loggerChannelFactory
-          ->get('multisite_helper')
-          ->debug($e->getMessage());
+    return $this->sendAsyncRequests($plugin_id_copy, $requests);
+  }
 
-        $result = FALSE;
-        continue;
-      }
+  /**
+   * Sends a set of predefined requests asynchronously.
+   */
+  public function sendAsyncRequests(string $plugin_id, array $requests): bool {
+    $config = $this->configFactory->get('multisite_helper.settings');
+    $result = TRUE;
 
-      if ($response->getStatusCode() > 299 || $response->getStatusCode() < 200) {
-        $this->loggerChannelFactory
-          ->get('multisite_helper')
-          ->error('Something went wrong while syncing data to subsite.');
-      }
+    try {
+      $pool = new Pool($this->httpClient, $requests, [
+        'concurrency' => $config->get('concurrent_calls') ?: 5,
+        'fulfilled' => function (ResponseInterface $response, $index) {},
+        'rejected' => function (RequestException $reason, $index) {
+          // Log a user friendly message.
+          $this->messenger
+            ->addError('Something went wrong while syncing data to subsite.');
+          // Then log debugging data.
+          $this->loggerChannelFactory->get('multisite_helper')->debug($reason->getMessage());
+        },
+      ]);
+
+      $pool->promise()->wait();
+    }
+    catch (\Exception|\Throwable $e) {
+      // Log a user friendly message.
+      $this->messenger
+        ->addError('Something went wrong while syncing data to subsite.');
+
+      // Then log debugging data.
+      $this->loggerChannelFactory
+        ->get('multisite_helper')
+        ->debug($e->getMessage());
+
+      $result = FALSE;
     }
 
     $this->loggerChannelFactory

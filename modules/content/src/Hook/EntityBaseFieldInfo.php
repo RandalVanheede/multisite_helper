@@ -56,6 +56,17 @@ class EntityBaseFieldInfo {
       ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', FALSE);
 
+    $fields['mh_sync_menu_link'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Sync menu link'))
+      ->setDescription(t("Whether this item's menu link should be synced to other subsites."))
+      ->setDefaultValue(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+        'weight' => -6,
+      ])
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', FALSE);
+
     return $fields;
   }
 

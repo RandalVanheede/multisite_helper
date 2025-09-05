@@ -5,6 +5,7 @@ namespace Drupal\multisite_helper\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,7 +34,9 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
    * {@inheritDoc}
    */
   public function getEditableConfigNames(): array {
-    return ['multisite_helper.settings'];
+    return array_values(array_merge(['multisite_helper.settings'], array_map(static function ($plugin_definition) {
+      return 'multisite_helper.plugin.' . $plugin_definition['id'];
+    }, $this->pluginManager->getDefinitions())));
   }
 
   /**
@@ -43,6 +46,15 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
     $form['#tree'] = TRUE;
     $config = $this->config('multisite_helper.settings');
     $values = $form_state->getValues();
+
+    $form['concurrent_calls'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Number of concurrent calls'),
+      '#description' => $this->t('The amount of concurrent calls to send asynchronously other subsites.<br><strong>Important:</strong> This applies to whichever processing method is picked for the plugins.'),
+      '#default_value' => $config->get('concurrent_calls') ?: $form_state->getValue('concurrent_calls') ?: 5,
+      '#min' => 1,
+      '#config_target' => 'multisite_helper.settings:concurrent_calls',
+    ];
 
     $form['plugins'] = [
       '#type' => 'vertical_tabs',
@@ -62,7 +74,7 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
     $open = TRUE;
     foreach ($definitions as $plugin_id => $plugin_definition) {
       $plugin_values = $values['plugins'][$plugin_id] ?? [];
-      $plugin_values += $config->get('plugins')[$plugin_id] ?? [];
+      $plugin_values += $this->configFactory()->get('multisite_helper.plugin.' . $plugin_id)->getRawData() ?? [];
       /** @var \Drupal\multisite_helper\MultisiteHelperPluginInterface $plugin */
       $plugin = $this->pluginManager->createInstance($plugin_id, $plugin_values);
 
@@ -71,7 +83,6 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
         '#title' => $plugin_definition['label'],
         '#description' => $plugin_definition['description'],
         '#group' => 'plugins',
-        '#config_target' => 'multisite_helper.settings:plugins.' . $plugin_id,
       ];
 
       // Make sure the first tab is always open.
@@ -83,6 +94,11 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
       $plugin_form_state = new FormState();
       $plugin_form_state->setValues($plugin_values);
       $form['plugins'][$plugin_id] += $plugin->buildConfigurationForm([], $plugin_form_state);
+
+      foreach (Element::children($form['plugins'][$plugin_id]) as $key) {
+        $form['plugins'][$plugin_id][$key]['#config_target']
+          = 'multisite_helper.plugin.' . $plugin_id . ':' . $key;
+      }
     }
 
     return parent::buildForm($form, $form_state);
@@ -98,7 +114,7 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
     $definitions = $this->pluginManager->getDefinitions();
     foreach ($definitions as $plugin_id => $plugin_definition) {
       $plugin_values = $values['plugins'][$plugin_id] ?? [];
-      $plugin_values += $config->get('plugins')[$plugin_id] ?? [];
+      $plugin_values += $this->configFactory()->get('multisite_helper.plugin.' . $plugin_id)->getRawData() ?? [];
       /** @var \Drupal\multisite_helper\MultisiteHelperPluginInterface $plugin */
       $plugin = $this->pluginManager->createInstance($plugin_id, $plugin_values);
       $plugin_form_state = new FormState();

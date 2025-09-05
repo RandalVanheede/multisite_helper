@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Drupal\multisite_helper\Plugin\MultisiteHelperExecutionMethod;
+namespace Drupal\multisite_helper\Plugin\MultisiteHelperProcessingMethod;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\multisite_helper\Attribute\MultisiteHelperExecutionMethod;
-use Drupal\multisite_helper\MultisiteHelperExecutionMethodPluginBase;
+use Drupal\multisite_helper\Attribute\MultisiteHelperProcessingMethod;
+use Drupal\multisite_helper\MultisiteHelperProcessingMethodPluginBase;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-#[MultisiteHelperExecutionMethod(
+#[MultisiteHelperProcessingMethod(
   id: 'direct',
   label: new TranslatableMarkup('Direct'),
   description: new TranslatableMarkup('Send the data during the request.'),
 )]
-final class Direct extends MultisiteHelperExecutionMethodPluginBase {
+final class Direct extends MultisiteHelperProcessingMethodPluginBase {
 
   private readonly MultisiteHelperInterface $helper;
 

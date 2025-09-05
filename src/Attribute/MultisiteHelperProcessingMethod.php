@@ -8,13 +8,13 @@ use Drupal\Component\Plugin\Attribute\AttributeBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * The multisite_helper_execution_method attribute.
+ * The multisite_helper_processing_method attribute.
  */
 #[\Attribute(\Attribute::TARGET_CLASS)]
-final class MultisiteHelperExecutionMethod extends AttributeBase {
+final class MultisiteHelperProcessingMethod extends AttributeBase {
 
   /**
-   * Constructs a new MultisiteHelperExecutionMethod instance.
+   * Constructs a new MultisiteHelperProcessingMethod instance.
    *
    * @param string $id
    *   The plugin ID. There are some implementation bugs that make the plugin

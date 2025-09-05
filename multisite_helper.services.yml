@@ -14,10 +14,10 @@ services:
       $configFactory: '@config.factory'
   Drupal\multisite_helper\MultisiteHelperPluginManager: '@plugin.manager.multisite_helper_plugin'
 
-  plugin.manager.multisite_helper_execution_method:
-    class: Drupal\multisite_helper\MultisiteHelperExecutionMethodPluginManager
+  plugin.manager.multisite_helper_processing_method:
+    class: Drupal\multisite_helper\MultisiteHelperProcessingMethodPluginManager
     parent: default_plugin_manager
-  Drupal\multisite_helper\MultisiteHelperExecutionMethodPluginManager: '@plugin.manager.multisite_helper_execution_method'
+  Drupal\multisite_helper\MultisiteHelperProcessingMethodPluginManager: '@plugin.manager.multisite_helper_processing_method'
 
   Drupal\multisite_helper\Hook\FormAlter:
     class: Drupal\multisite_helper\Hook\FormAlter

@@ -1,0 +1,6 @@
+multisite_helper.plugin.term_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    vids:
+      type: sequence
+      label: 'Vocabularies'

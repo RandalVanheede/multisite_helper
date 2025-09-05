@@ -19,15 +19,15 @@ interface MultisiteHelperPluginInterface extends PluginFormInterface, Configurab
   public function label(): string;
 
   /**
-   * This flag tells the form to add fields for the execution method choice.
-   * If this is set to false, the 'getExecutionMethod' should probably be overridden.
+   * This flag tells the form to add fields for the processing method choice.
+   * If this is set to false, the 'getProcessingMethod' should probably be overridden.
    */
-  public function allowExecutionMethodChoice(): bool;
+  public function allowProcessingMethodChoice(): bool;
 
   /**
-   * Retrieves the method of execution for this plugin.
+   * Retrieves the method of processing for this plugin.
    */
-  public function getExecutionMethod(): string;
+  public function getProcessingMethod(): string;
 
   /**
    * Processes the incoming data for this plugin.

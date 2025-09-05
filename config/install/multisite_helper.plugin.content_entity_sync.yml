@@ -1,0 +1,3 @@
+enabled: false
+processing_method: cron
+entity_types: {  }

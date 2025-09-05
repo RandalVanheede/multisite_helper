@@ -1,0 +1,6 @@
+multisite_helper.plugin.account_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    roles:
+      type: sequence
+      label: 'Roles'

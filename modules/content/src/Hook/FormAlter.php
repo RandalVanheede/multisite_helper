@@ -27,11 +27,18 @@ class FormAlter {
     $this->addSyncFields($form, $form_state);
   }
 
+  /**
+   * Validate the node entity.
+   */
   public function nodeFormValidate(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\node\NodeInterface $node */
     $node = $form_state->getFormObject()->getEntity();
     $current_sites = array_column($node->get('mh_sites')->getValue(), 'value');
-    $new_sites = array_column($form_state->getValues()['mh_sites'] ?? [], 'value');
+    if (!($form_state->getValue('mh_sync')['value'] ?? NULL)) {
+      $form_state->setValue('mh_sites', []);
+      $form_state->setValue('mh_sync_menu_link', []);
+    }
+    $new_sites = array_column($form_state->getValue('mh_sites') ?: [], 'value');
 
     $deleted_sites = array_diff($current_sites, $new_sites);
     $form_state->setValue('mh_sites_deleted', $deleted_sites);
@@ -41,7 +48,7 @@ class FormAlter {
    * Send this node's data to other subsites.
    */
   public function nodeFormSubmit(array &$form, FormStateInterface $form_state): void {
-    /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentEntitySync $plugin */
+    /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
     $plugin = $this->pluginManager->getPlugin('content_sync');
     $plugin_config = $plugin->getConfiguration();
     if (empty($plugin_config['enabled'])) {
@@ -68,6 +75,10 @@ class FormAlter {
     $node_values = $this->contentExporter->doExportToArray($node);
     $node_values['custom_fields']['mh_sync'] = [['value' => 1]];
     $node_values['custom_fields']['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
+    $node_values['custom_fields']['mh_sync_menu_link'] = [['value' => $form_values['mh_sync_menu_link']['value']]];
+    if (empty($form_values['mh_sync_menu_link']['value'])) {
+      unset($node_values['base_fields']['menu_link']);;
+    }
     $plugin->send($node_values, $sites);
     if ($deleted_sites) {
       $plugin->remove($node_values, $deleted_sites);
@@ -95,16 +106,26 @@ class FormAlter {
     $is_synced = $node->get('mh_sync')->value;
     if ($is_synced) {
       $form['mh_settings']['#title'] .= $this->t(' (Synchronized)');
+      $form['mh_settings']['#open'] = TRUE;
     }
 
     $form['mh_sync']['#group'] = 'mh_settings';
     $form['mh_sites']['#group'] = 'mh_settings';
     $form['mh_source']['#group'] = 'mh_settings';
+    $form['mh_sync_menu_link']['#group'] = 'mh_settings';
     $form['mh_source']['#access'] = FALSE;
 
     $form['mh_sites']['#states'] = [
       'visible' => [
         ':input[name="mh_sync[value]"]' => ['checked' => TRUE],
+      ],
+    ];
+
+    $form['mh_sync_menu_link']['#states'] = [
+      'visible' => [
+        ':input[name="mh_sync[value]"]' => ['checked' => TRUE],
+        'and',
+        ':input[name="menu[enabled]"]' => ['checked' => TRUE],
       ],
     ];
 
@@ -129,6 +150,9 @@ class FormAlter {
       // Remove all irrelevant fields while the node is locked.
       if ($is_synced) {
         $skip_fields = ['advanced', 'actions', 'footer', 'meta'];
+        if (!$node->get('mh_sync_menu_link')->value) {
+          $skip_fields[] = 'menu';
+        }
         foreach (Element::children($form) as $field_name) {
           if (str_starts_with($field_name, 'mh_') || str_starts_with($field_name, 'form_')) {
             continue;

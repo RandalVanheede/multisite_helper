@@ -7,9 +7,9 @@ namespace Drupal\multisite_helper;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
- * Interface for multisite_helper_execution_method plugins.
+ * Interface for multisite_helper_processing_method plugins.
  */
-interface MultisiteHelperExecutionMethodInterface extends ContainerFactoryPluginInterface {
+interface MultisiteHelperProcessingMethodInterface extends ContainerFactoryPluginInterface {
 
   /**
    * Returns the translated plugin label.

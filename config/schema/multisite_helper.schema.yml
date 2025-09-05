@@ -2,6 +2,30 @@ multisite_helper.settings:
   type: config_object
   label: 'Multisite Helper: Settings'
   mapping:
+    concurrent_calls:
+      type: integer
+      label: 'Number of concurrent calls'
     plugins:
       type: sequence
       label: 'Plugins'
+
+multisite_helper.plugin_base:
+  type: config_object
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enable plugin'
+    processing_method:
+      type: string
+      label: 'Processing method'
+
+multisite_helper.plugin.*:
+  type: multisite_helper.plugin_base
+  label: 'Multisite Helper: Plugin settings'
+
+multisite_helper.plugin.content_entity_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    entity_types:
+      type: sequence
+      label: 'Entity types'

@@ -8,9 +8,9 @@ use Drupal\Component\Plugin\PluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Base class for multisite_helper_execution_method plugins.
+ * Base class for multisite_helper_processing_method plugins.
  */
-abstract class MultisiteHelperExecutionMethodPluginBase extends PluginBase implements MultisiteHelperExecutionMethodInterface {
+abstract class MultisiteHelperProcessingMethodPluginBase extends PluginBase implements MultisiteHelperProcessingMethodInterface {
 
   /**
    * {@inheritDoc}

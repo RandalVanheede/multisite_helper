@@ -22,7 +22,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
 
   use PluginFormTrait;
 
-  const DEFAULT_EXECUTION_METHOD = 'cron';
+  const DEFAULT_PROCESSING_METHOD = 'cron';
 
   /**
    * Constructs a \Drupal\Component\Plugin\PluginBase object.
@@ -42,7 +42,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     protected MultisiteHelperInterface $helper,
     protected ContentImporterInterface $contentImporter,
     protected EntityRepositoryInterface $entityRepository,
-    protected MultisiteHelperExecutionMethodPluginManager $executionMethodPluginManager,
+    protected MultisiteHelperProcessingMethodPluginManager $processingMethodPluginManager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->setConfiguration($configuration);
@@ -60,7 +60,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       $container->get('multisite_helper'),
       $container->get('single_content_sync.importer'),
       $container->get('entity.repository'),
-      $container->get('plugin.manager.multisite_helper_execution_method'),
+      $container->get('plugin.manager.multisite_helper_processing_method'),
     );
   }
 
@@ -89,15 +89,15 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
   /**
    * {@inheritDoc}
    */
-  public function allowExecutionMethodChoice(): bool {
+  public function allowProcessingMethodChoice(): bool {
     return TRUE;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getExecutionMethod(): string {
-    return $this->configuration['execution_method'] ?? static::DEFAULT_EXECUTION_METHOD;
+  public function getProcessingMethod(): string {
+    return $this->configuration['processing_method'] ?? static::DEFAULT_PROCESSING_METHOD;
   }
 
   /**
@@ -106,7 +106,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
   public function defaultConfiguration() {
     return array_filter([
       'enabled' => FALSE,
-      'execution_method' => $this->allowExecutionMethodChoice() ? static::DEFAULT_EXECUTION_METHOD : NULL,
+      'processing_method' => $this->allowProcessingMethodChoice() ? static::DEFAULT_PROCESSING_METHOD : NULL,
     ]);
   }
 
@@ -120,18 +120,18 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       '#default_value' => $this->configuration['enabled'] ?? FALSE,
     ];
 
-    if ($this->allowExecutionMethodChoice()) {
-      $execution_methods = $this->executionMethodPluginManager->getDefinitions();
+    if ($this->allowProcessingMethodChoice()) {
+      $processing_methods = $this->processingMethodPluginManager->getDefinitions();
 
-      $form['execution_method'] = [
+      $form['processing_method'] = [
         '#type' => 'radios',
-        '#title' => $this->t('Execution method'),
+        '#title' => $this->t('Processing method'),
         '#description' => $this->t('Choose how the plugin should process its items.'),
         '#description_display' => 'before',
         '#options' => array_map(static function ($definition) {
           return $definition['label'];
-        }, $execution_methods),
-        '#default_value' => static::getExecutionMethod(),
+        }, $processing_methods),
+        '#default_value' => static::getProcessingMethod(),
         '#required' => TRUE,
         '#states' => [
           'visible' => [
@@ -140,8 +140,8 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
         ],
       ];
 
-      foreach ($execution_methods as $plugin_id => $plugin_definition) {
-        $form['execution_method'][$plugin_id]['#description'] = $plugin_definition['description'];
+      foreach ($processing_methods as $plugin_id => $plugin_definition) {
+        $form['processing_method'][$plugin_id]['#description'] = $plugin_definition['description'];
       }
     }
 
@@ -159,11 +159,11 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       ? MultisiteHelper::getOtherSiteHostnames()
       : $sites;
 
-    /** @var \Drupal\multisite_helper\MultisiteHelperExecutionMethodInterface $execution_method */
-    $execution_method = $this->executionMethodPluginManager
-      ->createInstance($this->getExecutionMethod());
+    /** @var \Drupal\multisite_helper\MultisiteHelperProcessingMethodInterface $processing_method */
+    $processing_method = $this->processingMethodPluginManager
+      ->createInstance($this->getProcessingMethod());
 
-    return $execution_method->send($this->getPluginId(), $data, $sites);
+    return $processing_method->send($this->getPluginId(), $data, $sites);
   }
 
   /**
@@ -177,11 +177,11 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       ? MultisiteHelper::getOtherSiteHostnames()
       : $sites;
 
-    /** @var \Drupal\multisite_helper\MultisiteHelperExecutionMethodInterface $execution_method */
-    $execution_method = $this->executionMethodPluginManager
-      ->createInstance($this->getExecutionMethod());
+    /** @var \Drupal\multisite_helper\MultisiteHelperProcessingMethodInterface $processing_method */
+    $processing_method = $this->processingMethodPluginManager
+      ->createInstance($this->getProcessingMethod());
 
-    return $execution_method->remove($this->getPluginId(), $data, $sites);
+    return $processing_method->remove($this->getPluginId(), $data, $sites);
   }
 
   /**
