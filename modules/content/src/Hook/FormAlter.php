@@ -22,7 +22,6 @@ class FormAlter {
 
   #[Hook('form_node_form_alter')]
   public function nodeFormAlter(array &$form, FormStateInterface $form_state): void {
-    $form['actions']['submit']['#submit'][] = [$this, 'nodeFormSubmit'];
     $form['#validate'][] = [$this, 'nodeFormValidate'];
     $this->addSyncFields($form, $form_state);
   }
@@ -31,57 +30,9 @@ class FormAlter {
    * Validate the node entity.
    */
   public function nodeFormValidate(array &$form, FormStateInterface $form_state): void {
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $form_state->getFormObject()->getEntity();
-    $current_sites = array_column($node->get('mh_sites')->getValue(), 'value');
     if (!($form_state->getValue('mh_sync')['value'] ?? NULL)) {
       $form_state->setValue('mh_sites', []);
       $form_state->setValue('mh_sync_menu_link', []);
-    }
-    $new_sites = array_column($form_state->getValue('mh_sites') ?: [], 'value');
-
-    $deleted_sites = array_diff($current_sites, $new_sites);
-    $form_state->setValue('mh_sites_deleted', $deleted_sites);
-  }
-
-  /**
-   * Send this node's data to other subsites.
-   */
-  public function nodeFormSubmit(array &$form, FormStateInterface $form_state): void {
-    /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
-    $plugin = $this->pluginManager->getPlugin('content_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
-      return;
-    }
-
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $form_state->getFormObject()->getEntity();
-
-    // Check if this website is the source website of the item, or if the sync
-    // is turned off for this item.
-    if (!$node->get('mh_source')->isEmpty() || !$node->get('mh_sync')->value) {
-      return;
-    }
-
-    $form_values = $form_state->getValues();
-    $sites = array_map(static function ($item) {
-      return MultisiteHelper::getHostnameForSite($item['value']);
-    }, $form_values['mh_sites']);
-    $deleted_sites = array_map(static function ($item) {
-      return MultisiteHelper::getHostnameForSite($item);
-    }, $form_values['mh_sites_deleted']);
-
-    $node_values = $this->contentExporter->doExportToArray($node);
-    $node_values['custom_fields']['mh_sync'] = [['value' => 1]];
-    $node_values['custom_fields']['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
-    $node_values['custom_fields']['mh_sync_menu_link'] = [['value' => $form_values['mh_sync_menu_link']['value']]];
-    if (empty($form_values['mh_sync_menu_link']['value'])) {
-      unset($node_values['base_fields']['menu_link']);;
-    }
-    $plugin->send($node_values, $sites);
-    if ($deleted_sites) {
-      $plugin->remove($node_values, $deleted_sites);
     }
   }
 

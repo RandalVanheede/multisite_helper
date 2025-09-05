@@ -2,39 +2,39 @@
 
 namespace Drupal\multisite_helper_taxonomy\Hook;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Drupal\single_content_sync\ContentExporterInterface;
+use Drupal\taxonomy\TermInterface;
 
-class FormAlter {
+class EntityHooks {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
     private readonly ContentExporterInterface $contentExporter,
   ) {}
 
-  #[Hook('form_taxonomy_term_form_alter')]
-  public function termFormAlter(array &$form, FormStateInterface $form_state): void {
-    $form['actions']['submit']['#submit'][] = [$this, 'termFormSubmit'];
-    if (isset($form['actions']['overview'])) {
-      $form['actions']['overview']['#submit'][] = [$this, 'termFormSubmit'];
-    }
+  #[Hook('taxonomy_term_insert')]
+  #[Hook('taxonomy_term_update')]
+  public function save(TermInterface $term): void {
+    $this->doSend($term, 'send');
+  }
+
+  #[Hook('taxonomy_term_delete')]
+  public function delete(TermInterface $term): void {
+    $this->doSend($term, 'remove');
   }
 
   /**
-   * Send this node's data to other subsites.
+   * Sends the required data to the send/remove endpoint.
    */
-  public function termFormSubmit(array &$form, FormStateInterface $form_state): void {
+  public function doSend(TermInterface $term, string $action): void {
     /** @var \Drupal\multisite_helper_taxonomy\Plugin\MultisiteHelperPlugin\TermSync $plugin */
     $plugin = $this->pluginManager->getPlugin('term_sync');
     $plugin_config = $plugin->getConfiguration();
     if (empty($plugin_config['enabled'])) {
       return;
     }
-
-    /** @var \Drupal\taxonomy\TermInterface $term */
-    $term = $form_state->getFormObject()->getEntity();
 
     // Check if the term is part of the configured vocabularies.
     $configured_vids = array_filter($plugin_config['vids']);
@@ -44,7 +44,7 @@ class FormAlter {
 
     $term_values = $this->contentExporter->doExportToArray($term);
     $term_values['custom_fields']['status'] = [['value' => (int) $term->isPublished()]];
-    $plugin->send($term_values);
+    $plugin->{$action}($term_values);
   }
 
 }

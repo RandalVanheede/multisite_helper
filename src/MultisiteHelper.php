@@ -20,6 +20,12 @@ class MultisiteHelper implements MultisiteHelperInterface {
   use StringTranslationTrait;
 
   /**
+   * The importing flag, this flag should be checked when saving entities
+   * to prevent infinite save/delete loops.
+   */
+  private static bool $isImporting = FALSE;
+
+  /**
    * Construct the multisite helper class.
    */
   public function __construct(
@@ -182,6 +188,20 @@ class MultisiteHelper implements MultisiteHelperInterface {
       ->info($this->t('The @plugin_id item has been processed.', ['@plugin_id' => $plugin_id]));
 
     return $result;
+  }
+
+  /**
+   * Set the importing flag to the class.
+   */
+  public static function setImporting(bool $importing = TRUE): void {
+    self::$isImporting = $importing;
+  }
+
+  /**
+   * Returns the importing flag value.
+   */
+  public static function isImporting(): bool {
+    return self::$isImporting;
   }
 
 }

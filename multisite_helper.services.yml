@@ -19,11 +19,6 @@ services:
     parent: default_plugin_manager
   Drupal\multisite_helper\MultisiteHelperProcessingMethodPluginManager: '@plugin.manager.multisite_helper_processing_method'
 
-  Drupal\multisite_helper\Hook\FormAlter:
-    class: Drupal\multisite_helper\Hook\FormAlter
-    arguments:
-      $contentExporter: '@single_content_sync.exporter'
-
   Drupal\multisite_helper\Hook\EntityHooks:
     class: Drupal\multisite_helper\Hook\EntityHooks
     arguments:

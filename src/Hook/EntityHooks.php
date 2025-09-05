@@ -15,8 +15,21 @@ class EntityHooks {
     private readonly ContentExporterInterface $contentExporter,
   ) {}
 
+  #[Hook('entity_insert')]
+  #[Hook('entity_update')]
+  public function save(EntityInterface $entity): void {
+    $this->doSend($entity, 'send');
+  }
+
   #[Hook('entity_delete')]
   public function delete(EntityInterface $entity): void {
+    $this->doSend($entity, 'remove');
+  }
+
+  /**
+   * Sends the required data to the send/remove endpoint.
+   */
+  public function doSend(EntityInterface $entity, string $action): void {
     if (!$entity instanceof ContentEntityInterface) {
       return;
     }
@@ -33,7 +46,7 @@ class EntityHooks {
     }
 
     $entity_values = $this->contentExporter->doExportToArray($entity);
-    $plugin->remove($entity_values);
+    $plugin->{$action}($entity_values);
   }
 
 }

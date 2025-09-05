@@ -1,6 +1,6 @@
 <?php
 
-use Drupal\multisite_helper_content\Hook\EntityBaseFieldInfo;
+use Drupal\multisite_helper_content\Hook\EntityHooks;
 
 /**
  * @file
@@ -11,7 +11,7 @@ use Drupal\multisite_helper_content\Hook\EntityBaseFieldInfo;
  * Installs the sync fields to the node entity type.
  */
 function multisite_helper_content_install(): void {
-  $fields = EntityBaseFieldInfo::getSyncFields();
+  $fields = EntityHooks::getSyncFields();
 
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   foreach ($fields as $field_name => $field_definition) {

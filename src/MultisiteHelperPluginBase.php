@@ -155,6 +155,10 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
    * be sent. If this is left empty, the data will be sent to all other sites.
    */
   public function send(array $data, ?array $sites = NULL): bool {
+    if (MultisiteHelper::isImporting()) {
+      return FALSE;
+    }
+
     $sites = $sites === NULL
       ? MultisiteHelper::getOtherSiteHostnames()
       : $sites;
@@ -173,6 +177,10 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
    * be sent. If this is left empty, the data will be sent to all other sites.
    */
   public function remove(array $data, ?array $sites = NULL): bool {
+    if (MultisiteHelper::isImporting()) {
+      return FALSE;
+    }
+
     $sites = $sites === NULL
       ? MultisiteHelper::getOtherSiteHostnames()
       : $sites;

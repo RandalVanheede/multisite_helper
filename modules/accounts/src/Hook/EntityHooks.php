@@ -7,8 +7,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Drupal\single_content_sync\ContentExporterInterface;
+use Drupal\user\UserInterface;
 
-class FormAlter {
+class EntityHooks {
 
   use DependencySerializationTrait;
 
@@ -17,25 +18,24 @@ class FormAlter {
     private readonly ContentExporterInterface $contentExporter,
   ) {}
 
-  #[Hook('form_user_form_alter')]
-  public function userFormAlter(array &$form, FormStateInterface $form_state): void {
-    $form['actions']['submit']['#submit'][] = [$this, 'userFormSubmit'];
+  #[Hook('user_insert')]
+  #[Hook('user_update')]
+  public function save(UserInterface $user): void {
+    $this->doSend($user, 'send');
   }
 
-  /**
-   * Send this node's data to other subsites.
-   */
-  public function userFormSubmit(array &$form, FormStateInterface $form_state): void {
-    $values = $form_state->getValues();
+  #[Hook('user_delete')]
+  public function delete(UserInterface $user): void {
+    $this->doSend($user, 'remove');
+  }
+
+  public function doSend(UserInterface $user, string $action): void {
     /** @var \Drupal\multisite_helper_accounts\Plugin\MultisiteHelperPlugin\AccountSync $plugin */
     $plugin = $this->pluginManager->getPlugin('account_sync');
     $plugin_config = $plugin->getConfiguration();
     if (empty($plugin_config['enabled'])) {
       return;
     }
-
-    /** @var \Drupal\user\UserInterface $user */
-    $user = $form_state->getFormObject()->getEntity();
 
     // Check if the user has any of the configured roles.
     $configured_roles = array_filter($plugin_config['roles']);
@@ -47,7 +47,7 @@ class FormAlter {
     if (!empty($values['pass'])) {
       $user_values['custom_fields']['pass'] = [['value' => $values['pass']]];
     }
-    $plugin->send($user_values);
+    $plugin->{$action}($user_values);
   }
 
 }
