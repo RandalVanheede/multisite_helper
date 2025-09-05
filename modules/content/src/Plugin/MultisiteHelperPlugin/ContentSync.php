@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\multisite_helper\Attribute\MultisiteHelperPlugin;
 use Drupal\multisite_helper\MultisiteHelperPluginBase;
-use Drupal\user\RoleInterface;
 
 /**
  * Plugin implementation of the multisite_helper_plugin.

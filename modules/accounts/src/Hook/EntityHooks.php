@@ -3,7 +3,6 @@
 namespace Drupal\multisite_helper_accounts\Hook;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Drupal\single_content_sync\ContentExporterInterface;
