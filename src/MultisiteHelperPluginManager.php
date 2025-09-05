@@ -6,6 +6,7 @@ namespace Drupal\multisite_helper;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\multisite_helper\Attribute\MultisiteHelperPlugin;
@@ -28,15 +29,14 @@ final class MultisiteHelperPluginManager extends DefaultPluginManager {
    * Retrieve a configured plugin easily.
    */
   public function getPlugin(string $plugin_id): bool|MultisiteHelperPluginInterface {
-    return $this->createInstance($plugin_id, $this->getPluginConfig($plugin_id) ?: []) ?: FALSE;
+    return $this->createInstance($plugin_id, $this->getPluginConfig($plugin_id)?->getRawData() ?: []) ?: FALSE;
   }
 
   /**
    * Retrieve plugin configuration.
    */
-  public function getPluginConfig(string $plugin_id): mixed {
-    $config = $this->configFactory->get('multisite_helper.settings');
-    return $config->get('plugins.' . $plugin_id);
+  public function getPluginConfig(string $plugin_id): ImmutableConfig {
+    return $this->configFactory->get('multisite_helper.plugin.' . $plugin_id);
   }
 
 }

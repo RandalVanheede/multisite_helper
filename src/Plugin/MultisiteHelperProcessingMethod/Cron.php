@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 #[MultisiteHelperProcessingMethod(
   id: 'cron',
   label: new TranslatableMarkup('Cron (queue)'),
-  description: new TranslatableMarkup('Create queue items and process them on queue.'),
+  description: new TranslatableMarkup('Create queue items and process them on every cron run.'),
 )]
 final class Cron extends MultisiteHelperProcessingMethodPluginBase {
 

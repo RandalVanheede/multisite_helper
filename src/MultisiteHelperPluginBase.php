@@ -126,7 +126,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       $form['processing_method'] = [
         '#type' => 'radios',
         '#title' => $this->t('Processing method'),
-        '#description' => $this->t('Choose how the plugin should process its items.'),
+        '#description' => $this->t('Choose how the plugin should send its data to the selected subsites.'),
         '#description_display' => 'before',
         '#options' => array_map(static function ($definition) {
           return $definition['label'];
