@@ -3,15 +3,15 @@
 namespace Drupal\multisite_helper_taxonomy\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
-use Drupal\single_content_sync\ContentExporterInterface;
 use Drupal\taxonomy\TermInterface;
 
 class EntityHooks {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
-    private readonly ContentExporterInterface $contentExporter,
+    private readonly MultisiteHelperInterface $helper,
   ) {}
 
   #[Hook('taxonomy_term_insert')]
@@ -42,8 +42,10 @@ class EntityHooks {
       return;
     }
 
-    $term_values = $this->contentExporter->doExportToArray($term);
-    $term_values['custom_fields']['status'] = [['value' => (int) $term->isPublished()]];
+    $extra_data = [
+      'status' => [['value' => (int) $term->isPublished()]],
+    ];
+    $term_values = $this->helper->exportEntity($term, $extra_data);
     $plugin->{$action}($term_values);
   }
 

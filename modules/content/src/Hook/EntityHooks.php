@@ -6,15 +6,15 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\multisite_helper\MultisiteHelper;
+use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Drupal\node\NodeInterface;
-use Drupal\single_content_sync\ContentExporterInterface;
 
 class EntityHooks {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
-    private readonly ContentExporterInterface $contentExporter,
+    private readonly MultisiteHelperInterface $helper,
   ) {}
 
   #[Hook('node_insert')]
@@ -55,12 +55,13 @@ class EntityHooks {
     }
 
     // Grab the node values and add the custom mh_sync values.
-    $node_values = $this->contentExporter->doExportToArray($node);
-    $node_values['custom_fields']['mh_sync'] = [['value' => 1]];
-    $node_values['custom_fields']['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
-    $node_values['custom_fields']['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
+    $extra_data['mh_sync'] = [['value' => 1]];
+    $extra_data['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
+    $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
+    $node_values = $this->helper->exportEntity($node, $extra_data);
     if (empty($form_values['mh_sync_menu_link']['value'])) {
-      unset($node_values['base_fields']['menu_link']);;
+      unset($node_values['menu_link']);
+      unset($node_values['base_fields']['menu_link']);
     }
     $plugin->send($node_values, $sites);
     if ($deleted_sites) {
@@ -87,12 +88,13 @@ class EntityHooks {
     }, array_filter(array_column($node->get('mh_sites')->getValue(), 'value')));
 
     // Grab the node values and add the custom mh_sync values.
-    $node_values = $this->contentExporter->doExportToArray($node);
-    $node_values['custom_fields']['mh_sync'] = [['value' => 1]];
-    $node_values['custom_fields']['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
-    $node_values['custom_fields']['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
+    $extra_data['mh_sync'] = [['value' => 1]];
+    $extra_data['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
+    $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
+    $node_values = $this->helper->exportEntity($node, $extra_data);
     if (empty($form_values['mh_sync_menu_link']['value'])) {
-      unset($node_values['base_fields']['menu_link']);;
+      unset($node_values['menu_link']);
+      unset($node_values['base_fields']['menu_link']);
     }
     $plugin->remove($node_values, $sites);
   }

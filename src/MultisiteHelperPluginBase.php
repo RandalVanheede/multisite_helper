@@ -10,7 +10,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Plugin\PluginFormTrait;
-use Drupal\single_content_sync\ContentImporterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -40,7 +39,6 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     $plugin_definition,
     protected QueueFactory $queueFactory,
     protected MultisiteHelperInterface $helper,
-    protected ContentImporterInterface $contentImporter,
     protected EntityRepositoryInterface $entityRepository,
     protected MultisiteHelperProcessingMethodPluginManager $processingMethodPluginManager,
   ) {
@@ -58,7 +56,6 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       $plugin_definition,
       $container->get('queue'),
       $container->get('multisite_helper'),
-      $container->get('single_content_sync.importer'),
       $container->get('entity.repository'),
       $container->get('plugin.manager.multisite_helper_processing_method'),
     );
@@ -199,7 +196,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     switch ($action) {
       case 'PUT':
       case 'POST':
-        if ($this->contentImporter->doImport($data)) {
+        if ($this->helper->importEntity($data)) {
           return TRUE;
         }
         return FALSE;

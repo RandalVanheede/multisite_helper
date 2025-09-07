@@ -7,6 +7,7 @@ services:
     class: Drupal\multisite_helper\MultisiteHelper
   Drupal\multisite_helper\MultisiteHelperInterface: '@multisite_helper'
 
+  # Plugin managers
   plugin.manager.multisite_helper_plugin:
     class: Drupal\multisite_helper\MultisiteHelperPluginManager
     parent: default_plugin_manager
@@ -19,7 +20,7 @@ services:
     parent: default_plugin_manager
   Drupal\multisite_helper\MultisiteHelperProcessingMethodPluginManager: '@plugin.manager.multisite_helper_processing_method'
 
-  Drupal\multisite_helper\Hook\EntityHooks:
-    class: Drupal\multisite_helper\Hook\EntityHooks
-    arguments:
-      $contentExporter: '@single_content_sync.exporter'
+  plugin.manager.multisite_helper_entity_processor:
+    class: Drupal\multisite_helper\MultisiteHelperEntityProcessorPluginManager
+    parent: default_plugin_manager
+  Drupal\multisite_helper\MultisiteHelperEntityProcessorPluginManager: '@plugin.manager.multisite_helper_entity_processor'

@@ -9,7 +9,6 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\multisite_helper\MultisiteHelper;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
-use Drupal\single_content_sync\ContentExporterInterface;
 
 class FormAlter {
 
@@ -17,7 +16,6 @@ class FormAlter {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
-    private readonly ContentExporterInterface $contentExporter,
   ) {}
 
   #[Hook('form_node_form_alter')]

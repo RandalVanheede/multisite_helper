@@ -8,7 +8,9 @@
         }
     ],
     "require": {
-        "php": ">=8.1",
-        "drupal/single_content_sync": "^1.4.0"
+        "php": ">=8.1"
+    },
+    "suggest": {
+        "drupal/single_content_sync": "Provides an entity import/export processor."
     }
 }

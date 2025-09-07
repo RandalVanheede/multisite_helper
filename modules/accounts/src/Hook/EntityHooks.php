@@ -4,8 +4,8 @@ namespace Drupal\multisite_helper_accounts\Hook;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
-use Drupal\single_content_sync\ContentExporterInterface;
 use Drupal\user\UserInterface;
 
 class EntityHooks {
@@ -14,7 +14,7 @@ class EntityHooks {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
-    private readonly ContentExporterInterface $contentExporter,
+    private readonly MultisiteHelperInterface $helper,
   ) {}
 
   #[Hook('user_insert')]
@@ -42,10 +42,7 @@ class EntityHooks {
       return;
     }
 
-    $user_values = $this->contentExporter->doExportToArray($user);
-    if (!empty($values['pass'])) {
-      $user_values['custom_fields']['pass'] = [['value' => $values['pass']]];
-    }
+    $user_values = $this->helper->exportEntity($user);
     $plugin->{$action}($user_values);
   }
 

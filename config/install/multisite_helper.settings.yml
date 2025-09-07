@@ -1,2 +1,3 @@
+entity_processor: single_content_sync
 concurrent_calls: 5
 plugins: {  }

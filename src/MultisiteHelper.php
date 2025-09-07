@@ -4,6 +4,7 @@ namespace Drupal\multisite_helper;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -25,6 +26,8 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   private static bool $isImporting = FALSE;
 
+  private MultisiteHelperEntityProcessorInterface $entityProcessor;
+
   /**
    * Construct the multisite helper class.
    */
@@ -34,6 +37,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     private readonly MessengerInterface $messenger,
     private readonly ClientInterface $httpClient,
     private readonly ConfigFactoryInterface $configFactory,
+    private readonly MultisiteHelperEntityProcessorPluginManager $entityProcessorPluginManager,
   ) {}
 
   /**
@@ -151,7 +155,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
   /**
    * Sends a set of predefined requests asynchronously.
    */
-  public function sendAsyncRequests(string $plugin_id, array $requests): bool {
+  private function sendAsyncRequests(string $plugin_id, array $requests): bool {
     $config = $this->configFactory->get('multisite_helper.settings');
     $result = TRUE;
 
@@ -188,6 +192,30 @@ class MultisiteHelper implements MultisiteHelperInterface {
       ->info($this->t('The @plugin_id item has been processed.', ['@plugin_id' => $plugin_id]));
 
     return $result;
+  }
+
+  /**
+   * Retrieves the entity processor plugin.
+   */
+  private function getEntityProcessor(): MultisiteHelperEntityProcessorInterface {
+    if (empty($this->entityProcessor)) {
+      $plugin_id = $this->configFactory->get('multisite_helper.settings')->get('entity_processor');
+      $this->entityProcessor = $this->entityProcessorPluginManager->createInstance($plugin_id);
+    }
+
+    return $this->entityProcessor;
+  }
+
+  public function importEntity(array $data): bool {
+    return $this->getEntityProcessor()->importEntity($data);
+  }
+
+  public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array {
+    return $this->getEntityProcessor()->exportEntity($entity);
+  }
+
+  public function deleteEntity(array $data): bool {
+    return $this->getEntityProcessor()->deleteEntity($data);
   }
 
   /**

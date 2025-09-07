@@ -5,14 +5,14 @@ namespace Drupal\multisite_helper\Hook;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
-use Drupal\single_content_sync\ContentExporterInterface;
 
 class EntityHooks {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
-    private readonly ContentExporterInterface $contentExporter,
+    private readonly MultisiteHelperInterface $helper,
   ) {}
 
   #[Hook('entity_insert')]
@@ -45,7 +45,7 @@ class EntityHooks {
       return;
     }
 
-    $entity_values = $this->contentExporter->doExportToArray($entity);
+    $entity_values = $this->helper->exportEntity($entity);
     $plugin->{$action}($entity_values);
   }
 
