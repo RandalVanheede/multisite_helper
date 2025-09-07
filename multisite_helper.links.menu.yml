@@ -1,5 +1,18 @@
-multisite_helper.settings:
-  title: 'Multisite Helper settings'
+multisite_helper:
+  title: 'Multisite Helper'
   description: 'Manage Multisite Helper settings for your site'
   parent: system.admin_config_system
+  route_name: 'multisite_helper.settings'
+
+multisite_helper.settings:
+  title: 'Settings'
+  description: 'Manage Multisite Helper settings for your site'
+  parent: multisite_helper
   route_name: multisite_helper.settings
+  weight: -1
+
+multisite_helper.plugin_settings:
+  title: 'Plugins'
+  description: 'Manage Multisite Helper plugin settings for your site'
+  parent: multisite_helper
+  route_name: multisite_helper.plugin_settings

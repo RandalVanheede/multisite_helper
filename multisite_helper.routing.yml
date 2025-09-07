@@ -6,6 +6,14 @@ multisite_helper.settings:
   requirements:
     _permission: 'administer multisite helper'
 
+multisite_helper.plugin_settings:
+  path: '/admin/config/system/multisite-helper/plugins'
+  defaults:
+    _form: 'Drupal\multisite_helper\Form\MultisiteHelperPluginSettingsForm'
+    _title: 'Multisite Helper: Settings'
+  requirements:
+    _permission: 'administer multisite helper'
+
 multisite_helper.receive:
   path: '/api/multisite-helper/sync-data/{plugin_id}'
   defaults:

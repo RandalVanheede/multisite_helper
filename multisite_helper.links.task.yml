@@ -1,0 +1,10 @@
+multisite_helper.settings:
+  title: 'Settings'
+  route_name: multisite_helper.settings
+  base_route: multisite_helper.settings
+  weight: -1
+
+multisite_helper.plugin_settings:
+  title: 'Plugins'
+  route_name: multisite_helper.plugin_settings
+  base_route: multisite_helper.settings
