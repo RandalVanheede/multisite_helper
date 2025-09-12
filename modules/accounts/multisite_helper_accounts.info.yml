@@ -1,5 +1,5 @@
 name: 'Multisite Helper - Accounts'
-description: 'Allows managing and synchronizing accounts across multisites'
+description: 'Allows managing and synchronizing accounts across multisites. If an SSO solution is used, it''s advised to disable any and all account synchronization!'
 package: 'Multisite'
 type: module
 core_version_requirement: ^10.4 || ^11.1

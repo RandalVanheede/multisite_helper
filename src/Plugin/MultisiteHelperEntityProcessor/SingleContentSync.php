@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 #[MultisiteHelperEntityProcessor(
   id: 'single_content_sync',
   label: new TranslatableMarkup('Single Content Sync importer/exporter'),
-  description: new TranslatableMarkup('Uses the import/export functionality of the single content sync module.'),
+  description: new TranslatableMarkup('Uses the import/export functionality of the single content sync module, supports much more complex importing/exporting.'),
   module_dependencies: ['single_content_sync'],
 )]
 final class SingleContentSync extends MultisiteHelperEntityProcessorPluginBase {
@@ -55,7 +55,9 @@ final class SingleContentSync extends MultisiteHelperEntityProcessorPluginBase {
    */
   public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array {
     $entity_data = $this->contentExporter->doExportToArray($entity);
-    return NestedArray::mergeDeepArray([$entity_data, $extra_data]);
+    // Add extra data to the custom_fields array item.
+    $entity_data['custom_fields'] = NestedArray::mergeDeepArray([$entity_data['custom_fields'], $extra_data]);
+    return $entity_data;
   }
 
   /**

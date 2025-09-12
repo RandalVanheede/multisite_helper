@@ -36,6 +36,12 @@ final class AccountSync extends MultisiteHelperPluginBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
+    $form['warning'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'strong',
+      '#value' => (string) $this->t("If an SSO solution is used, it's advised to disable any and all account synchronization and just let the SSO provider handle it."),
+    ];
+
     $roles = array_map(static function (RoleInterface $role) {
       return $role->label();
     }, \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple());

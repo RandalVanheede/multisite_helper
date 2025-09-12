@@ -60,7 +60,7 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => $this->t('Number of concurrent calls'),
       '#description' => $this->t('The processor to import, export or delete entities.'),
-      '#default_value' => $config->get('entity_processor') ?: $form_state->getValue('entity_processor') ?: 'single_content_sync',
+      '#default_value' => $config->get('entity_processor') ?: $form_state->getValue('entity_processor') ?: 'basic',
       '#options' => array_map(static function ($plugin_definition) {
         return $plugin_definition['label'];
       }, $entity_processors),
