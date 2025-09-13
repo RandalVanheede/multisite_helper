@@ -3,3 +3,9 @@ entity.mh_subsite.add_form:
   title: 'Add multisite helper subsite'
   appears_on:
     - entity.mh_subsite.collection
+  # Open as dialog.
+  options:
+    attributes:
+      class: ['use-ajax']
+      data-dialog-type: 'modal'
+      data-dialog-options: '{"width": 600}'

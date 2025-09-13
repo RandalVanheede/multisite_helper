@@ -17,8 +17,13 @@ final class MhSubsiteForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state): array {
-
     $form = parent::form($form, $form_state);
+
+    $form['status'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $this->entity->status(),
+    ];
 
     $form['label'] = [
       '#type' => 'textfield',
@@ -37,25 +42,32 @@ final class MhSubsiteForm extends EntityForm {
       '#disabled' => !$this->entity->isNew(),
     ];
 
-    $form['status'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enabled'),
-      '#default_value' => $this->entity->status(),
-    ];
-
     $form['description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->entity->get('description'),
+      '#rows' => 2,
     ];
 
     $form['url'] = [
       '#type' => 'url',
       '#title' => $this->t('URL'),
+      '#description' => $this->t('The base URL for the website, without trailing slash.'),
       '#default_value' => $this->entity->get('url'),
+      '#required' => TRUE,
     ];
 
     return $form;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $values = &$form_state->getValues();
+    $values['url'] = rtrim($values['url'], '/');
+
+    parent::submitForm($form, $form_state);
   }
 
   /**

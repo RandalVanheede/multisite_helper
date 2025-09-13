@@ -262,4 +262,22 @@ class MultisiteHelper implements MultisiteHelperInterface {
     return self::$isImporting;
   }
 
+  /**
+   * Ping a subsite's URL.
+   */
+  public static function ping(string $url): bool {
+    if($url == NULL) {
+      return FALSE;
+    }
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $httpcode >= 200 && $httpcode < 300;
+  }
+
 }

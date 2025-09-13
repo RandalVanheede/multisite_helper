@@ -20,6 +20,7 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
     $header['subsite'] = $this->t('Subsite');
     $header['url'] = $this->t('Url');
     $header['status'] = $this->t('Status');
+    $header['accessible'] = $this->t('Accessible');
     return $header + parent::buildHeader();
   }
 
@@ -31,6 +32,7 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
     $row['subsite'] = $entity->label() . ' (' . $entity->id() . ')';
     $row['url'] = $entity->get('url');
     $row['status'] = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
+    $row['accessible'] = \Drupal::service('multisite_helper')->ping($entity->get('url')) ? '✔' : '✖';
 
     if (\Drupal::request()->getSchemeAndHttpHost() === $row['url']) {
       foreach ($row as &$row_item) {
