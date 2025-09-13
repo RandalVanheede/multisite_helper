@@ -67,7 +67,7 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
     $entity_processors = $this->entityProcessorManager->getDefinitions();
     $form['entity_processor'] = [
       '#type' => 'radios',
-      '#title' => $this->t('Number of concurrent calls'),
+      '#title' => $this->t('Entity processor plugin'),
       '#description' => $this->t('The processor to import, export or delete entities.'),
       '#default_value' => $config->get('entity_processor') ?: $form_state->getValue('entity_processor') ?: 'basic',
       '#options' => array_map(static function ($plugin_definition) {

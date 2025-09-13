@@ -1,0 +1,7 @@
+multisite_helper_content.uuid_redirect:
+  path: '/api/multisite-helper/node-uuid-redirect/{uuid}/{operation}'
+  defaults:
+    _controller: '\Drupal\multisite_helper_content\Controller\NodeUuidController::uuidRedirect'
+    operation: null
+  requirements:
+    _custom_access: '\Drupal\multisite_helper_content\Controller\NodeUuidController::uuidAccess'

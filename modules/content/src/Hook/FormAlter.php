@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 
@@ -88,20 +89,23 @@ class FormAlter {
       ],
     ];
 
-    if (!$node->get('mh_source')->isEmpty() && ($source_site = $node->get('mh_source')->getString())) {
+    if ($source_site = $node->get('mh_source')->entity) {
       $form['mh_sync']['widget']['value']['#title'] = $this->t('Lock to source website');
       $form['mh_sync']['widget']['value']['#description'] = $this->t('Uncheck this box to unlock this content from its main site. You will not be able to send this item to other subsites after unlocking, you <strong>can</strong> lock it again to be synchronized again if needed.');
       $form['mh_sites']['#access'] = FALSE;
 
+      $relative_url = Url::fromRoute('multisite_helper_content.uuid_redirect', [
+        'uuid' => $node->uuid(),
+        'operation' => 'edit',
+      ])->toString();
       $form['mh_source_label'] = [
         '#type' => 'html_tag',
         '#tag' => 'h4',
         '#value' => new FormattableMarkup(
           'Edit this item on the source website: <a href=":link">:title</a>',
           [
-            // @todo : redirect to node edit page?
-            ':link' => $this->helper->getHostnameForSite($source_site),
-            ':title' => $source_site,
+            ':link' => $source_site->get('url') . $relative_url,
+            ':title' => $source_site->label(),
           ],
         ),
       ];

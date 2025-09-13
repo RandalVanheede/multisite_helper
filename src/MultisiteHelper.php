@@ -282,7 +282,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    return $httpCode >= 200 && $httpCode < 300;
+    return $httpCode >= 200 && $httpCode < 400;
   }
 
 }
