@@ -2,9 +2,12 @@
 
 namespace Drupal\multisite_helper_content\Hook;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\multisite_helper\Entity\MhSubsite;
+use Drupal\multisite_helper\MhSubsiteInterface;
 use Drupal\multisite_helper\MultisiteHelper;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
@@ -42,21 +45,26 @@ class EntityHooks {
     }
 
     // Calculate the sites and deleted sites lists.
-    $sites = array_map(static function ($item) {
-      return MultisiteHelper::getHostnameForSite($item);
-    }, array_filter(array_column($node->get('mh_sites')->getValue(), 'value')));
+    $sites = array_map(function (MhSubsiteInterface $subsite) {
+      return $subsite->get('url');
+    }, $node->get('mh_sites')->referencedEntities());
     $deleted_sites = [];
     if ($original) {
-      $original_sites = array_filter(array_column($original->get('mh_sites')->getValue(), 'value'));
-      $original_sites = array_map(static function ($item) {
-        return MultisiteHelper::getHostnameForSite($item);
-      }, $original_sites);
+      $original_sites = array_map(function (MhSubsiteInterface $subsite) {
+        return $subsite->get('url');
+      }, $original->get('mh_sites')->referencedEntities());
       $deleted_sites = array_diff($original_sites, $sites);
     }
 
     // Grab the node values and add the custom mh_sync values.
     $extra_data['mh_sync'] = [['value' => 1]];
-    $extra_data['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
+    $extra_data['mh_source'] = [
+      [
+        'value' => $this->helper->getCurrentSiteId(),
+        'target_id' => $this->helper->getCurrentSiteId(),
+        'type' => 'config',
+      ],
+    ];
     $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
     $node_values = $this->helper->exportEntity($node, $extra_data);
     if (empty($form_values['mh_sync_menu_link']['value'])) {
@@ -83,13 +91,19 @@ class EntityHooks {
     }
 
     // Calculate the sites list.
-    $sites = array_map(static function ($item) {
-      return MultisiteHelper::getHostnameForSite($item);
-    }, array_filter(array_column($node->get('mh_sites')->getValue(), 'value')));
+    $sites = array_map(function (MhSubsiteInterface $subsite) {
+      return $subsite->get('url');
+    }, $node->get('mh_sites')->referencedEntities());
 
     // Grab the node values and add the custom mh_sync values.
     $extra_data['mh_sync'] = [['value' => 1]];
-    $extra_data['mh_source'] = [['value' => MultisiteHelper::getCurrentSiteName()]];
+    $extra_data['mh_source'] = [
+      [
+        'value' => $this->helper->getCurrentSiteId(),
+        'target_id' => $this->helper->getCurrentSiteId(),
+        'type' => 'config',
+      ],
+    ];
     $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
     $node_values = $this->helper->exportEntity($node, $extra_data);
     if (empty($form_values['mh_sync_menu_link']['value'])) {
@@ -123,11 +137,11 @@ class EntityHooks {
       ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', FALSE);
 
-    $fields['mh_sites'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Sites'))
+    $fields['mh_sites'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Subsites'))
       ->setDescription(t('The subsites to deploy this content item to.'))
-      ->setSetting('allowed_values_function', [MultisiteHelper::class, 'getOtherSitesAsOptions'])
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setSetting('target_type', 'mh_subsite')
       ->setDisplayOptions('form', [
         'type' => 'options_buttons',
         'weight' => -5,
@@ -135,12 +149,14 @@ class EntityHooks {
       ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', FALSE);
 
-    $fields['mh_source'] = BaseFieldDefinition::create('string')
+    $fields['mh_source'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Source website'))
       ->setDescription(t('Which website this content originates from.'))
+      ->setCardinality(1)
+      ->setSetting('target_type', 'mh_subsite')
       ->setDisplayOptions('form', [
-        'type' => 'string_textfield',
-        'weight' => -4,
+        'type' => 'options_buttons',
+        'weight' => -5,
       ])
       ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', FALSE);

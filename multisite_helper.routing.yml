@@ -22,3 +22,35 @@ multisite_helper.receive:
   requirements:
     _custom_access: 'Drupal\multisite_helper\Controller\MultisiteHelperController::apiKeyAccess'
   methods: [PUT, POST, DELETE]
+
+entity.mh_subsite.collection:
+  path: '/admin/config/system/multisite-helper/subsites'
+  defaults:
+    _entity_list: 'mh_subsite'
+    _title: 'Multisite Helper Subsite configuration'
+  requirements:
+    _permission: 'administer mh_subsite'
+
+entity.mh_subsite.add_form:
+  path: '/admin/config/system/multisite-helper/subsites/add'
+  defaults:
+    _entity_form: 'mh_subsite.add'
+    _title: 'Add a multisite helper subsite'
+  requirements:
+    _permission: 'administer mh_subsite'
+
+entity.mh_subsite.edit_form:
+  path: '/admin/config/system/multisite-helper/subsites/{mh_subsite}'
+  defaults:
+    _entity_form: 'mh_subsite.edit'
+    _title: 'Edit a multisite helper subsite'
+  requirements:
+    _permission: 'administer mh_subsite'
+
+entity.mh_subsite.delete_form:
+  path: '/admin/config/system/multisite-helper/subsites/{mh_subsite}/delete'
+  defaults:
+    _entity_form: 'mh_subsite.delete'
+    _title: 'Delete a multisite helper subsite'
+  requirements:
+    _permission: 'administer mh_subsite'

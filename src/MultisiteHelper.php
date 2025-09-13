@@ -4,17 +4,20 @@ namespace Drupal\multisite_helper;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\multisite_helper\Entity\MhSubsite;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class MultisiteHelper implements MultisiteHelperInterface {
 
@@ -28,6 +31,8 @@ class MultisiteHelper implements MultisiteHelperInterface {
 
   private MultisiteHelperEntityProcessorInterface $entityProcessor;
 
+  private ImmutableConfig $config;
+
   /**
    * Construct the multisite helper class.
    */
@@ -38,76 +43,93 @@ class MultisiteHelper implements MultisiteHelperInterface {
     private readonly ClientInterface $httpClient,
     private readonly ConfigFactoryInterface $configFactory,
     private readonly MultisiteHelperEntityProcessorPluginManager $entityProcessorPluginManager,
-  ) {}
-
-  /**
-   * Retrieves the main subsite name.
-   */
-  public static function getMainSiteName(): string {
-    return static::getSetting('main_site');
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly RequestStack $requestStack,
+  ) {
+    $this->config = $this->configFactory->get('multisite_helper.settings');
   }
 
   /**
-   * Retrieves the current subsite name.
+   * {@inheritDoc}
    */
-  public static function getCurrentSiteName(): string {
-    return static::getSetting('current_site');
+  public function getCurrentSiteId(): string|bool {
+    $scheme_and_host = $this->requestStack->getCurrentRequest()
+      ->getSchemeAndHttpHost();
+    $subsites = $this->entityTypeManager
+      ->getStorage('mh_subsite')
+      ->loadByProperties(['url' => $scheme_and_host]);
+    $subsite = reset($subsites);
+    return $subsite?->id() ?: FALSE;
   }
 
   /**
-   * Returns the hostname for a given sitename.
+   * {@inheritDoc}
    */
-  public static function getHostnameForSite(string $sitename): string|bool {
-    $sites = static::getSetting('sites_by_sitename');
-    return $sites[$sitename] ?? FALSE;
+  public function getCurrentSiteLabel(): string|bool {
+    $scheme_and_host = $this->requestStack->getCurrentRequest()
+      ->getSchemeAndHttpHost();
+    $subsites = $this->entityTypeManager
+      ->getStorage('mh_subsite')
+      ->loadByProperties(['url' => $scheme_and_host]);
+    $subsite = reset($subsites);
+    return $subsite?->label() ?: FALSE;
   }
 
   /**
-   * Retrieves the other subsites' hostnames.
+   * {@inheritDoc}
    */
-  public static function getOtherSiteHostnames(): array {
-    $hostname = \Drupal::request()->getHost();
-    $sites = static::getSetting('sites_by_hostname');
-    return array_values(array_filter(array_keys($sites), static function ($site) use ($hostname) {
-      return $site !== $hostname;
-    }));
+  public function getHostnameForSite(string $site_id): string|bool {
+    $subsite = $this->entityTypeManager
+      ->getStorage('mh_subsite')
+      ->load($site_id);
+    return $subsite?->label() ?: FALSE;
   }
 
   /**
-   * Retrieves the other subsites formatted as an options array.
+   * {@inheritDoc}
+   */
+  public function getOtherSiteHostnames(): array {
+    $scheme_and_host = $this->requestStack->getCurrentRequest()
+      ->getSchemeAndHttpHost();
+    $storage = $this->entityTypeManager->getStorage('mh_subsite');
+    $subsite_ids = $storage->getQuery()
+      ->condition('status', MhSubsite::ENABLED)
+      ->condition('url', $scheme_and_host, '<>')
+      ->execute();
+
+    return array_values(array_filter(array_map(function ($subsite_id) use ($storage) {
+      $subsite = $storage->load($subsite_id);
+      return $subsite?->get('url');
+    }, $subsite_ids)));
+  }
+
+  /**
+   * {@inheritDoc}
    */
   public static function getOtherSitesAsOptions(): array {
-    $hostname = \Drupal::request()->getHost();
-    $sites_readable = static::getSetting('sites_readable', []);
-    $sites = static::getSetting('sites_by_sitename');
+    $scheme_and_host = \Drupal::request()->getSchemeAndHttpHost();
+    $storage = \Drupal::entityTypeManager()->getStorage('mh_subsite');
+    $subsite_ids = $storage->getQuery()
+      ->condition('status', MhSubsite::ENABLED)
+      ->condition('url', $scheme_and_host, '<>')
+      ->execute();
 
-    // Filter the current website out, and use the readable sitename if available.
-    return array_map(static function ($hostname) use ($sites_readable) {
-      return $sites_readable[$hostname] ?? $hostname;
-    }, array_filter($sites, static function ($site) use ($hostname) {
-      return $site !== $hostname;
-    }));
-  }
-
-  /**
-   * Retrieves a specific setting.
-   */
-  public static function getSetting(string $key, $default = NULL): mixed {
-    $settings = static::getSettings();
-    return $settings[$key] ?? $default;
-  }
-
-  /**
-   * Retrieve the full settings array.
-   */
-  private static function getSettings(): array {
-    return Settings::get('subsite_helper', []);
+    return array_filter(array_map(function ($subsite_id) use ($storage) {
+      $subsite = $storage->load($subsite_id);
+      return $subsite?->label();
+    }, $subsite_ids));
   }
 
   /**
    * {@inheritDoc}
    */
   public function sendToSites(string $plugin_id, array $data, array $sites): bool {
+    // Force remove the current site from the list of sites.
+    $scheme_and_host = $this->requestStack->getCurrentRequest()->getSchemeAndHttpHost();
+    if ($current_site_delta = array_search($scheme_and_host, $sites)) {
+      unset($sites[$current_site_delta]);
+    }
+
     // Allow the plugin data and sites array to be altered.
     $plugin_id_copy = $plugin_id;
     $this->moduleHandler->alter('multisite_helper_plugin_data', $data, $sites, $plugin_id_copy);
@@ -116,10 +138,10 @@ class MultisiteHelper implements MultisiteHelperInterface {
     foreach ($sites as $hostname) {
       $requests[$hostname] = new Request(
         method: 'POST',
-        uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
+        uri: $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
         headers: [
           'Content-Type' => 'application/json',
-          'X-Api-Key' => static::getSetting('api_key'),
+          'X-Api-Key' => $this->config->get('api_key'),
         ],
         body: Json::encode($data),
       );
@@ -143,7 +165,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
         uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
         headers: [
           'Content-Type' => 'application/json',
-          'X-Api-Key' => static::getSetting('api_key'),
+          'X-Api-Key' => $this->config->get('api_key'),
         ],
         body: Json::encode($data),
       );
@@ -156,12 +178,11 @@ class MultisiteHelper implements MultisiteHelperInterface {
    * Sends a set of predefined requests asynchronously.
    */
   private function sendAsyncRequests(string $plugin_id, array $requests): bool {
-    $config = $this->configFactory->get('multisite_helper.settings');
     $result = TRUE;
 
     try {
       $pool = new Pool($this->httpClient, $requests, [
-        'concurrency' => $config->get('concurrent_calls') ?: 5,
+        'concurrency' => $this->config->get('concurrent_calls') ?: 5,
         'fulfilled' => function (ResponseInterface $response, $index) {},
         'rejected' => function (RequestException $reason, $index) {
           // Log a user friendly message.
@@ -199,34 +220,43 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   private function getEntityProcessor(): MultisiteHelperEntityProcessorInterface {
     if (empty($this->entityProcessor)) {
-      $plugin_id = $this->configFactory->get('multisite_helper.settings')->get('entity_processor');
+      $plugin_id = $this->config->get('entity_processor');
       $this->entityProcessor = $this->entityProcessorPluginManager->createInstance($plugin_id);
     }
 
     return $this->entityProcessor;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public function importEntity(array $data): bool {
     return $this->getEntityProcessor()->importEntity($data);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array {
-    return $this->getEntityProcessor()->exportEntity($entity);
+    return $this->getEntityProcessor()->exportEntity($entity, $extra_data);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public function deleteEntity(array $data): bool {
     return $this->getEntityProcessor()->deleteEntity($data);
   }
 
   /**
-   * Set the importing flag to the class.
+   * {@inheritDoc}
    */
   public static function setImporting(bool $importing = TRUE): void {
     self::$isImporting = $importing;
   }
 
   /**
-   * Returns the importing flag value.
+   * {@inheritDoc}
    */
   public static function isImporting(): bool {
     return self::$isImporting;

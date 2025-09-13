@@ -4,6 +4,11 @@ multisite_helper.settings:
   base_route: multisite_helper.settings
   weight: -1
 
+entity.mh_subsite.collection:
+  title: 'Subsites'
+  route_name: entity.mh_subsite.collection
+  base_route: multisite_helper.settings
+
 multisite_helper.plugin_settings:
   title: 'Plugins'
   route_name: multisite_helper.plugin_settings

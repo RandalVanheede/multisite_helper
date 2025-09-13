@@ -3,19 +3,23 @@
 namespace Drupal\multisite_helper_content\Hook;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\multisite_helper\MultisiteHelper;
+use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 
 class FormAlter {
 
   use StringTranslationTrait;
 
+  use DependencySerializationTrait;
+
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
+    private readonly MultisiteHelperInterface $helper,
   ) {}
 
   #[Hook('form_node_form_alter')]
@@ -58,6 +62,12 @@ class FormAlter {
       $form['mh_settings']['#open'] = TRUE;
     }
 
+    // Don't allow deploying to the current subsite.
+    $current_site = $this->helper->getCurrentSiteId();
+    if (isset($form['mh_sites']['widget']['#options'][$current_site])) {
+      unset($form['mh_sites']['widget']['#options'][$current_site]);
+    }
+
     $form['mh_sync']['#group'] = 'mh_settings';
     $form['mh_sites']['#group'] = 'mh_settings';
     $form['mh_source']['#group'] = 'mh_settings';
@@ -90,7 +100,7 @@ class FormAlter {
           'Edit this item on the source website: <a href=":link">:title</a>',
           [
             // @todo : redirect to node edit page?
-            ':link' => 'https://' . MultisiteHelper::getHostnameForSite($source_site),
+            ':link' => $this->helper->getHostnameForSite($source_site),
             ':title' => $source_site,
           ],
         ),

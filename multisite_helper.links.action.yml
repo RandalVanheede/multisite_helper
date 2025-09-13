@@ -1,0 +1,5 @@
+entity.mh_subsite.add_form:
+  route_name: 'entity.mh_subsite.add_form'
+  title: 'Add multisite helper subsite'
+  appears_on:
+    - entity.mh_subsite.collection

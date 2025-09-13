@@ -16,3 +16,9 @@ multisite_helper.plugin_settings:
   description: 'Manage Multisite Helper plugin settings for your site'
   parent: multisite_helper
   route_name: multisite_helper.plugin_settings
+
+entity.mh_subsite.collection:
+  title: 'Subsites'
+  description: 'List of multisite helper subsites to extend site functionality.'
+  parent: multisite_helper
+  route_name: entity.mh_subsite.collection

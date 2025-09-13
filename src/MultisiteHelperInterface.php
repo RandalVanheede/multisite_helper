@@ -7,34 +7,29 @@ use Drupal\Core\Entity\ContentEntityInterface;
 interface MultisiteHelperInterface {
 
   /**
-   * Retrieves the main subsite name.
+   * Retrieves the current subsite id.
    */
-  public static function getMainSiteName(): string;
+  public function getCurrentSiteId(): string|bool;
 
   /**
-   * Retrieves the current subsite name.
+   * Retrieves the current subsite label.
    */
-  public static function getCurrentSiteName(): string;
+  public function getCurrentSiteLabel(): string|bool;
 
   /**
    * Returns the hostname for a given sitename.
    */
-  public static function getHostnameForSite(string $sitename): string|bool;
+  public function getHostnameForSite(string $site_id): string|bool;
 
   /**
    * Retrieves the other subsites' hostnames.
    */
-  public static function getOtherSiteHostnames(): array;
+  public function getOtherSiteHostnames(): array;
 
   /**
    * Retrieves the other subsites formatted as an options array.
    */
   public static function getOtherSitesAsOptions(): array;
-
-  /**
-   * Retrieves a specific setting.
-   */
-  public static function getSetting(string $key, $default = NULL): mixed;
 
   /**
    * Sends data to the given set of sites.

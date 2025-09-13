@@ -157,7 +157,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     }
 
     $sites = $sites === NULL
-      ? MultisiteHelper::getOtherSiteHostnames()
+      ? $this->helper->getOtherSiteHostnames()
       : $sites;
 
     /** @var \Drupal\multisite_helper\MultisiteHelperProcessingMethodInterface $processing_method */
@@ -179,7 +179,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     }
 
     $sites = $sites === NULL
-      ? MultisiteHelper::getOtherSiteHostnames()
+      ? $this->helper->getOtherSiteHostnames()
       : $sites;
 
     /** @var \Drupal\multisite_helper\MultisiteHelperProcessingMethodInterface $processing_method */

@@ -3,6 +3,7 @@
 namespace Drupal\multisite_helper\Controller;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\multisite_helper\MultisiteHelper;
@@ -15,13 +16,19 @@ class MultisiteHelperController extends ControllerBase {
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
-  ) {}
+    ConfigFactoryInterface $configFactory,
+  ) {
+    $this->configFactory = $configFactory;
+  }
 
   /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('plugin.manager.multisite_helper_plugin'));
+    return new static(
+      $container->get('plugin.manager.multisite_helper_plugin'),
+      $container->get('config.factory')
+    );
   }
 
   /**
@@ -42,7 +49,8 @@ class MultisiteHelperController extends ControllerBase {
    */
   public function apiKeyAccess(AccountInterface $account, string $plugin_id, Request $request) {
     $api_key = $request->headers->get('x-api-key');
-    return AccessResult::allowedIf($api_key === MultisiteHelper::getSetting('api_key'));
+    $config = $this->config('multisite_helper.settings');
+    return AccessResult::allowedIf($api_key === $config->get('api_key'));
   }
 
 }

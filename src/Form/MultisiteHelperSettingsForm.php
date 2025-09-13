@@ -45,6 +45,15 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
     $form['#tree'] = TRUE;
     $config = $this->config('multisite_helper.settings');
 
+    $form['api_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('The API key'),
+      '#description' => $this->t('The API key to be used across all subsites, this checks the validity of the calls between subsites.'),
+      '#default_value' => $config->get('api_key') ?: $form_state->getValue('api_key') ?: \Drupal::service('uuid')->generate(),
+      '#required' => TRUE,
+      '#config_target' => 'multisite_helper.settings:api_key',
+    ];
+
     $form['concurrent_calls'] = [
       '#type' => 'number',
       '#title' => $this->t('Number of concurrent calls'),

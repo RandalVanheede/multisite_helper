@@ -2,6 +2,9 @@ multisite_helper.settings:
   type: config_object
   label: 'Multisite Helper: Settings'
   mapping:
+    api_key:
+      type: string
+      label: 'API key'
     entity_processor:
       type: string
       label: 'The entity processor'
@@ -32,3 +35,20 @@ multisite_helper.plugin.content_entity_sync:
     entity_types:
       type: sequence
       label: 'Entity types'
+
+multisite_helper.mh_subsite.*:
+  type: config_entity
+  label: Multisite Helper Subsite
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+    url:
+      type: string
