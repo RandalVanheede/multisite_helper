@@ -263,21 +263,26 @@ class MultisiteHelper implements MultisiteHelperInterface {
   }
 
   /**
-   * Ping a subsite's URL.
+   * {@inheritDoc}
    */
-  public static function ping(string $url): bool {
+  public static function ping(string $url): ?bool {
     if($url == NULL) {
       return FALSE;
     }
+
+    if (!in_array('curl', get_loaded_extensions())) {
+      return NULL;
+    }
+
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
-    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    return $httpcode >= 200 && $httpcode < 300;
+    return $httpCode >= 200 && $httpCode < 300;
   }
 
 }

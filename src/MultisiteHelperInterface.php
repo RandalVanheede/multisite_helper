@@ -57,4 +57,9 @@ interface MultisiteHelperInterface {
    */
   public static function isImporting(): bool;
 
+  /**
+   * Ping a subsite's URL.
+   */
+  public static function ping(string $url): ?bool;
+
 }

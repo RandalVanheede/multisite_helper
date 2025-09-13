@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\multisite_helper;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\Markup;
@@ -32,7 +33,7 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
     $row['subsite'] = $entity->label() . ' (' . $entity->id() . ')';
     $row['url'] = $entity->get('url');
     $row['status'] = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
-    $row['accessible'] = \Drupal::service('multisite_helper')->ping($entity->get('url')) ? '✔' : '✖';
+    $row['accessible'] = MultisiteHelper::ping($entity->get('url')) ? '✔' : '✖';
 
     if (\Drupal::request()->getSchemeAndHttpHost() === $row['url']) {
       foreach ($row as &$row_item) {
@@ -41,6 +42,22 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
     }
 
     return $row + parent::buildRow($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOperations(EntityInterface $entity) {
+    $operations = parent::getOperations($entity);
+    if (isset($operations['edit'])) {
+      $url = &$operations['edit']['url'];
+      $attributes = $url->getOption('attributes');
+      $attributes['class'][] = 'use-ajax';
+      $attributes['data-dialog-type'] = 'modal';
+      $attributes['data-dialog-options'] = Json::encode(['width' => 600]);
+      $url->setOption('attributes', $attributes);
+    }
+    return $operations;
   }
 
 }
