@@ -37,14 +37,23 @@ interface MultisiteHelperInterface {
   public function sendToSites(string $plugin_id, array $data, array $sites): bool;
 
   /**
-   * REmoves data from the given set of sites.
+   * Removes data from the given set of sites.
    */
   public function removeFromSites(string $plugin_id, array $data, array $sites): bool;
 
+  /**
+   * Imports the given data as an entity.
+   */
   public function importEntity(array $data): bool;
 
+  /**
+   * Exports the given entity to plain array data.
+   */
   public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array;
 
+  /**
+   * Deletes an entity based on the import data.
+   */
   public function deleteEntity(array $data): bool;
 
   /**

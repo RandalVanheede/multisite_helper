@@ -1,5 +1,5 @@
 {
-    "name": "RandalVanheede/multisite_helper",
+    "name": "randalvanheede/multisite_helper",
     "type": "drupal-module",
     "authors": [
         {
@@ -11,6 +11,7 @@
         "php": ">=8.1"
     },
     "suggest": {
+        "ext-curl":  "Uses curl to ping subsites.",
         "drupal/single_content_sync": "Provides an entity import/export processor."
     }
 }

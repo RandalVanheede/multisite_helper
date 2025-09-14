@@ -25,6 +25,18 @@ class FormAlter {
 
   #[Hook('form_node_form_alter')]
   public function nodeFormAlter(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
+    $plugin = $this->pluginManager->getPlugin('content_sync');
+    $plugin_config = $plugin->getConfiguration();
+    if (empty($plugin_config['enabled'])) {
+      foreach (['mh_sync', 'mh_sites', 'mh_source', 'mh_sync_menu_link'] as $field_name) {
+        if (isset($form[$field_name])) {
+          $form[$field_name]['#access'] = FALSE;
+        }
+      }
+      return;
+    }
+
     $form['#validate'][] = [$this, 'nodeFormValidate'];
     $this->addSyncFields($form, $form_state);
   }

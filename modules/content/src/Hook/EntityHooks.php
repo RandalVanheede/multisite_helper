@@ -2,13 +2,10 @@
 
 namespace Drupal\multisite_helper_content\Hook;
 
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Hook\Attribute\Hook;
-use Drupal\multisite_helper\Entity\MhSubsite;
 use Drupal\multisite_helper\MhSubsiteInterface;
-use Drupal\multisite_helper\MultisiteHelper;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Drupal\node\NodeInterface;
