@@ -40,6 +40,7 @@ final class AccountSync extends MultisiteHelperPluginBase {
       '#type' => 'html_tag',
       '#tag' => 'strong',
       '#value' => (string) $this->t("If an SSO solution is used, it's advised to disable any and all account synchronization and just let the SSO provider handle it."),
+      '#weight' => -10,
     ];
 
     $roles = array_map(static function (RoleInterface $role) {

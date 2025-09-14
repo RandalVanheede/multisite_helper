@@ -26,7 +26,7 @@ multisite_helper.receive:
 entity.mh_subsite.collection:
   path: '/admin/config/system/multisite-helper/subsites'
   defaults:
-    _entity_list: 'mh_subsite'
+    _form: '\Drupal\multisite_helper\Form\MhSubsiteOverviewForm'
     _title: 'Multisite Helper Subsite configuration'
   requirements:
     _permission: 'administer mh_subsite'

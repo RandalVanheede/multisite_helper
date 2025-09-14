@@ -4,11 +4,13 @@ namespace Drupal\multisite_helper_content\Hook;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\multisite_helper\Entity\MhSubsite;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 
@@ -21,6 +23,7 @@ class FormAlter {
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
     private readonly MultisiteHelperInterface $helper,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   #[Hook('form_node_form_alter')]
@@ -75,10 +78,22 @@ class FormAlter {
       $form['mh_settings']['#open'] = TRUE;
     }
 
-    // Don't allow deploying to the current subsite.
+    // Don't allow deploying to the current subsite, and list the options by weight.
+    $form['mh_sites']['widget']['#options'] = [];
     $current_site = $this->helper->getCurrentSiteId();
-    if (isset($form['mh_sites']['widget']['#options'][$current_site])) {
-      unset($form['mh_sites']['widget']['#options'][$current_site]);
+    $storage = $this->entityTypeManager->getStorage('mh_subsite');
+    $subsite_ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('status', MhSubsite::ENABLED)
+      ->sort('weight')
+      ->execute();
+    foreach ($subsite_ids as $subsite_id) {
+      if ($subsite_id === $current_site) {
+        continue;
+      }
+
+      $subsite = $storage->load($subsite_id);
+      $form['mh_sites']['widget']['#options'][$subsite_id] = $subsite->label();
     }
 
     $form['mh_sync']['#group'] = 'mh_settings';

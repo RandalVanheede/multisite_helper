@@ -52,3 +52,5 @@ multisite_helper.mh_subsite.*:
       type: string
     url:
       type: string
+    weight:
+      type: integer

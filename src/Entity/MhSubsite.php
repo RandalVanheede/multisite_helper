@@ -52,6 +52,7 @@ use Drupal\multisite_helper\MhSubsiteListBuilder;
     'label',
     'description',
     'url',
+    'weight',
   ],
 )]
 final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
@@ -60,23 +61,28 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
   public const DISABLED = 0;
 
   /**
-   * The example ID.
+   * The subsite ID.
    */
   protected string $id;
 
   /**
-   * The example label.
+   * The subsite label.
    */
   protected string $label;
 
   /**
-   * The example description.
+   * The subsite description.
    */
   protected string $description;
 
   /**
-   * The example description.
+   * The subsite description.
    */
   protected string $url;
+
+  /**
+   * The subsite weight.
+   */
+  protected int $weight;
 
 }
