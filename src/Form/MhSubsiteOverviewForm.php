@@ -45,7 +45,7 @@ class MhSubsiteOverviewForm extends FormBase {
       '#header' => [
         'subsite' => $this->t('Subsite'),
         'url' => $this->t('Url'),
-        'status' => $this->t('Status'),
+        'status' => $this->t('Enabled'),
         'accessible' => $this->t('Accessible'),
         'weight' => $this->t('Weight'),
         'operations' => $this->t('Operations'),
@@ -70,7 +70,12 @@ class MhSubsiteOverviewForm extends FormBase {
       $form['table'][$entity->id()] = [
         'subsite' => ['#markup' => $entity->label() . ' (' . $entity->id() . ')'],
         'url' => ['#markup' => $entity->get('url')],
-        'status' => ['#markup' => $entity->status() ? $this->t('Enabled') : $this->t('Disabled')],
+        'status' => [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Status'),
+          '#title_display' => 'invisible',
+          '#default_value' => $entity->status(),
+        ],
         'accessible' => ['#markup' => MultisiteHelper::ping($entity->get('url')) ? '✔' : '✖'],
         'weight' => [
           '#type' => 'weight',
