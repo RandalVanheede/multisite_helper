@@ -83,6 +83,6 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
   /**
    * The subsite weight.
    */
-  protected int $weight;
+  protected ?int $weight = 0;
 
 }

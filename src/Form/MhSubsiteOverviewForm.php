@@ -59,9 +59,13 @@ class MhSubsiteOverviewForm extends FormBase {
       ],
     ];
 
-    $delta = 0;
     $storage = \Drupal::entityTypeManager()->getStorage('mh_subsite');
-    foreach ($storage->getQuery()->sort('weight')->execute() as $subsite_id) {
+    $subsite_ids = $storage
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->sort('weight')
+      ->execute();
+    foreach ($subsite_ids as $subsite_id) {
       $entity = $storage->load($subsite_id);
       $form['table'][$entity->id()] = [
         'subsite' => ['#markup' => $entity->label() . ' (' . $entity->id() . ')'],
@@ -70,7 +74,7 @@ class MhSubsiteOverviewForm extends FormBase {
         'accessible' => ['#markup' => MultisiteHelper::ping($entity->get('url')) ? '✔' : '✖'],
         'weight' => [
           '#type' => 'weight',
-          '#delta' => $delta,
+          '#delta' => count($subsite_ids),
           '#title' => $this->t('Weight for subsite'),
           '#title_display' => 'invisible',
           '#default_value' => $entity->get('weight') ?: 0,
@@ -89,9 +93,8 @@ class MhSubsiteOverviewForm extends FormBase {
         '#attributes' => [
           'class' => ['draggable'],
         ],
-        '#weight' => $delta,
+        '#weight' => $entity->get('weight') ?: 0,
       ];
-      $delta++;
 
       if ($this->helper->getCurrentSiteId() === $subsite_id) {
         foreach ($form['table'][$entity->id()] as $key => $item) {
