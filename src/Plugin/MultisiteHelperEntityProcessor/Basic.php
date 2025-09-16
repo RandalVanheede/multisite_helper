@@ -6,7 +6,6 @@ namespace Drupal\multisite_helper\Plugin\MultisiteHelperEntityProcessor;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\multisite_helper\Attribute\MultisiteHelperEntityProcessor;
@@ -54,15 +53,12 @@ final class Basic extends MultisiteHelperEntityProcessorPluginBase {
 
   private readonly EntityTypeManagerInterface $entityTypeManager;
 
-  private readonly EntityRepositoryInterface $entityRepository;
-
   /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
-    $instance->entityRepository = $container->get('entity.repository');
     return $instance;
   }
 
@@ -124,16 +120,8 @@ final class Basic extends MultisiteHelperEntityProcessorPluginBase {
       $entity_data['fields'][$field_definition->getName()] = $entity->get($field_definition->getName())->getValue();
     }
 
-    $entity_data['fields'] = NestedArray::mergeDeepArray([$entity_data['fields'], $extra_data]);
+    $entity_data['fields'] = NestedArray::mergeDeepArray([$entity_data['fields'], $extra_data], TRUE);
     return $entity_data;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function deleteEntity(array $data): bool {
-    $entity = $this->entityRepository->loadEntityByUuid($data['entity_type'], $data['uuid']);
-    return (bool) $entity?->delete();
   }
 
 }

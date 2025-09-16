@@ -1,0 +1,51 @@
+status: true
+dependencies:
+  enforced:
+    module:
+      - ''
+id: multisite_helper_settings
+label: 'Multisite Helper: Settings'
+routes:
+  -
+    route_name: multisite_helper.settings
+tips:
+  settings-api-key:
+    id: settings-api-key
+    plugin: text
+    label: 'API key'
+    weight: -100
+    position: auto
+    selector: 'input#edit-api-key'
+    body: "Make sure to add an API key, this exact key should be used across all subsites.\r\nIt will be used to validate calls coming from other subsites."
+  settings-concurrent-calls:
+    id: settings-concurrent-calls
+    plugin: text
+    label: 'Concurrent calls'
+    weight: -99
+    position: auto
+    selector: 'input#edit-concurrent-calls'
+    body: "The concurrent calls setting defines how many concurrent requests will be sent to other subsites.\r\nFor example, if you're saving a node and it's to be sent to 13 subsites, setting this value to 5 will mean 5 subsites will be synced simultaneously.\r\nIn the above example, this would mean 5 requests, another 5 requests and lastly 3 more requests."
+  entity-processor-plugin:
+    id: entity-processor-plugin
+    plugin: text
+    label: 'Entity processor plugin'
+    weight: -98
+    position: auto
+    selector: 'fieldset#edit-entity-processor--wrapper'
+    body: 'The entity processor plugin defines which module/plugin will be responsible for exporting entities to arrays, and importing entities from the previously exported array.'
+  save-changes:
+    id: save-changes
+    plugin: text
+    label: 'Save changes'
+    weight: -97
+    position: auto
+    selector: '#edit-actions-submit'
+    body: 'Save your changes'
+  subsites:
+    id: subsites
+    plugin: text
+    label: Subsites
+    weight: -96
+    position: auto
+    selector: 'a[data-drupal-link-system-path="admin/config/system/multisite-helper/subsites"]'
+    body: 'Next up, configure your subsites.'

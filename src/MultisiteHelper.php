@@ -230,6 +230,13 @@ class MultisiteHelper implements MultisiteHelperInterface {
   /**
    * {@inheritDoc}
    */
+  public function getEntityBaseInformation(array $data): array {
+    return $this->getEntityProcessor()->getEntityBaseInformation($data);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function importEntity(array $data): bool {
     return $this->getEntityProcessor()->importEntity($data);
   }
@@ -266,10 +273,6 @@ class MultisiteHelper implements MultisiteHelperInterface {
    * {@inheritDoc}
    */
   public static function ping(string $url): ?bool {
-    if($url == NULL) {
-      return FALSE;
-    }
-
     if (!in_array('curl', get_loaded_extensions())) {
       return NULL;
     }
@@ -279,10 +282,10 @@ class MultisiteHelper implements MultisiteHelperInterface {
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    return $httpCode >= 200 && $httpCode < 400;
+    return $http_code >= 200 && $http_code < 400;
   }
 
 }

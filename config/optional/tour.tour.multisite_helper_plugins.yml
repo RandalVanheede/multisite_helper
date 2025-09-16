@@ -1,0 +1,27 @@
+status: true
+dependencies:
+  enforced:
+    module:
+      - multisite_helper
+id: multisite_helper_plugins
+label: 'Multisite Helper: Plugins'
+routes:
+  -
+    route_name: multisite_helper.plugin_settings
+tips:
+  configure-plugins:
+    id: configure-plugins
+    plugin: text
+    label: 'Configure plugins'
+    weight: -100
+    position: auto
+    selector: ul.vertical-tabs__menu
+    body: "Configure the plugins you want to enable.<br>\r\nMake sure to also check the modules in this ecosystem, there might be modules that provide much more in-depth plugins than the default 'content entity sync'-plugin."
+  save-changes:
+    id: save-changes
+    plugin: text
+    label: 'Save changes'
+    weight: -100
+    position: auto
+    selector: '#edit-actions-submit'
+    body: "And lastly, don't forget to save your changes."

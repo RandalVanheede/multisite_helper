@@ -1,0 +1,43 @@
+status: true
+dependencies:
+  enforced:
+    module:
+      - multisite_helper
+id: multisite_helper_subsites
+label: ' Multisite Helper Subsite configuration'
+routes:
+  -
+    route_name: entity.mh_subsite.collection
+tips:
+  subsites-add-first-subsite:
+    id: subsites-add-first-subsite
+    plugin: text
+    label: 'Add your first subsite'
+    weight: -100
+    position: auto
+    selector: 'ul.local-actions a'
+    body: "Here you can add your first subsite.\r\nMake sure ALL subsites that should be synced to are included, this also means the current subsite."
+  re-order-and-enable-subsites:
+    id: re-order-and-enable-subsites
+    plugin: text
+    label: 'Re-order and enable subsites'
+    weight: -100
+    position: auto
+    selector: 'table#edit-table'
+    body: 'In this table you can change the order in which subsites will appear in some plugins, as well as disable or enable plugins.'
+  save-changes:
+    id: save-changes
+    plugin: text
+    label: 'Save changes'
+    weight: -100
+    position: auto
+    selector: '#edit-submit'
+    body: "Don't forget to save your changes!"
+  plugins:
+    id: plugins
+    plugin: text
+    label: Plugins
+    weight: -100
+    position: auto
+    selector: 'a[data-drupal-link-system-path="admin/config/system/multisite-helper/plugins"]'
+    body: 'Next up, configure your desired plugins.'

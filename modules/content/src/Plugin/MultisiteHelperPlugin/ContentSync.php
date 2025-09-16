@@ -23,10 +23,10 @@ final class ContentSync extends MultisiteHelperPluginBase {
    * {@inheritDoc}
    */
   public function receive(array $data, string $action): bool {
-    /** @var \Drupal\node\NodeStorageInterface $storage */
-    $storage = \Drupal::entityTypeManager()->getStorage('node');
-    $nodes = $storage->loadByProperties(['uuid' => $data['uuid']]);
-    if ($nodes && ($node = reset($nodes))) {
+    ['uuid' => $uuid] = $this->helper->getEntityBaseInformation($data);
+
+    $node = $this->entityRepository->loadEntityByUuid('node', $uuid);
+    if ($node) {
       // If sync checkbox is turned off, we can't process this item.
       if (!$node->get('mh_sync')->value) {
         return FALSE;

@@ -42,6 +42,11 @@ interface MultisiteHelperInterface {
   public function removeFromSites(string $plugin_id, array $data, array $sites): bool;
 
   /**
+   * This method returns the entity type and uuid of the entity.
+   */
+  public function getEntityBaseInformation(array $data): array;
+
+  /**
    * Imports the given data as an entity.
    */
   public function importEntity(array $data): bool;

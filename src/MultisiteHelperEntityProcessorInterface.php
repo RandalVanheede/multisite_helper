@@ -23,6 +23,11 @@ interface MultisiteHelperEntityProcessorInterface extends ContainerFactoryPlugin
   public function description(): string;
 
   /**
+   * This method returns the entity type and uuid of the entity.
+   */
+  public function getEntityBaseInformation(array $data): array;
+
+  /**
    * Import an entity by the exported entity data.
    */
   public function importEntity(array $data): bool;
