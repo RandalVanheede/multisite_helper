@@ -59,7 +59,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
       ->getStorage('mh_subsite')
       ->loadByProperties(['url' => $scheme_and_host]);
     $subsite = reset($subsites);
-    return $subsite?->id() ?: FALSE;
+    return $subsite ? $subsite->id() : FALSE;
   }
 
   /**
@@ -72,7 +72,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
       ->getStorage('mh_subsite')
       ->loadByProperties(['url' => $scheme_and_host]);
     $subsite = reset($subsites);
-    return $subsite?->label() ?: FALSE;
+    return $subsite ? $subsite->label() : FALSE;
   }
 
   /**
@@ -82,7 +82,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     $subsite = $this->entityTypeManager
       ->getStorage('mh_subsite')
       ->load($site_id);
-    return $subsite?->label() ?: FALSE;
+    return $subsite ? $subsite->label() : FALSE;
   }
 
   /**
@@ -99,7 +99,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
 
     return array_values(array_filter(array_map(function ($subsite_id) use ($storage) {
       $subsite = $storage->load($subsite_id);
-      return $subsite?->get('url');
+      return $subsite ? $subsite->get('url') : NULL;
     }, $subsite_ids)));
   }
 
@@ -116,7 +116,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
 
     return array_filter(array_map(function ($subsite_id) use ($storage) {
       $subsite = $storage->load($subsite_id);
-      return $subsite?->label();
+      return $subsite ? $subsite->label() : NULL;
     }, $subsite_ids));
   }
 
