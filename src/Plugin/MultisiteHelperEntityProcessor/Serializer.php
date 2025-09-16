@@ -155,14 +155,48 @@ final class Serializer extends MultisiteHelperEntityProcessorPluginBase {
           continue;
         }
 
-        $entity_data['extra_entities'][$field_value['target_type']][$field_value['target_uuid']]
-          = $this->serializer->normalize($extra_entity, 'json');
+        $this->normalizeEntity($extra_entity, $entity_data['extra_entities']);
       }
     }
 
     // Add extra data to the custom_fields array item.
     $entity_data['fields'] = NestedArray::mergeDeepArray([$entity_data['fields'], $extra_data], TRUE);
     return $entity_data;
+  }
+
+  /**
+   * Recursive function to normalize all referenced entities.
+   */
+  private function normalizeEntity(ContentEntityInterface $entity, array &$extra_entities): void {
+    $entity_data = $this->serializer->normalize($entity, 'json');
+
+    if (!isset($extra_entities[$entity->getEntityTypeId()][$entity->uuid()])) {
+      $extra_entities[$entity->getEntityTypeId()][$entity->uuid()] = $entity_data;
+    }
+
+    // Also serialize/normalize extra entities that are referenced from the target entity.
+    foreach ($entity_data as $field_values) {
+      foreach ($field_values as $field_value) {
+        if (!is_array($field_value)) {
+          continue;
+        }
+
+        if (empty($field_value['target_type']) || empty($field_value['target_uuid'])) {
+          continue;
+        }
+
+        if (isset($extra_entities[$field_value['target_type']][$field_value['target_uuid']])) {
+          continue;
+        }
+
+        $extra_entity = $this->entityRepository->loadEntityByUuid($field_value['target_type'], $field_value['target_uuid']);
+        if (!$extra_entity instanceof ContentEntityInterface) {
+          continue;
+        }
+
+        $this->normalizeEntity($extra_entity, $extra_entities);
+      }
+    }
   }
 
 }

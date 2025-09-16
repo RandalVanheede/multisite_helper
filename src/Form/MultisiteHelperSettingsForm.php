@@ -65,6 +65,7 @@ class MultisiteHelperSettingsForm extends ConfigFormBase {
     ];
 
     $entity_processors = $this->entityProcessorManager->getDefinitions();
+    ksort($entity_processors);
     $form['entity_processor'] = [
       '#type' => 'radios',
       '#title' => $this->t('Entity processor plugin'),
