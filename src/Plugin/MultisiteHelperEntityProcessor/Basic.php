@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 #[MultisiteHelperEntityProcessor(
   id: 'basic',
-  label: new TranslatableMarkup('Basic importer/exporter'),
+  label: new TranslatableMarkup('Basic'),
   description: new TranslatableMarkup('Uses a very basic entity importer/exporter, without support for entity reference or other complex fields.'),
 )]
 final class Basic extends MultisiteHelperEntityProcessorPluginBase {

@@ -42,6 +42,11 @@ interface MultisiteHelperInterface {
   public function removeFromSites(string $plugin_id, array $data, array $sites): bool;
 
   /**
+   * Retrieves the entity processor plugin.
+   */
+  public function getEntityProcessor(): MultisiteHelperEntityProcessorInterface;
+
+  /**
    * This method returns the entity type and uuid of the entity.
    */
   public function getEntityBaseInformation(array $data): array;

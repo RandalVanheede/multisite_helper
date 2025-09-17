@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\SerializerInterface;
  */
 #[MultisiteHelperEntityProcessor(
   id: 'serializer',
-  label: new TranslatableMarkup('Serialization importer/exporter'),
+  label: new TranslatableMarkup('Serialization'),
   description: new TranslatableMarkup('Serializes and deserializes entities using services provides by core, supports complex entities.'),
   module_dependencies: ['serialization']
 )]

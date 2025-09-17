@@ -180,17 +180,18 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   private function sendAsyncRequests(string $plugin_id, array $requests): bool {
     $result = TRUE;
+    $logger = $this->loggerChannelFactory->get('multisite_helper');
 
     try {
       $pool = new Pool($this->httpClient, $requests, [
         'concurrency' => $this->config->get('concurrent_calls') ?: 5,
         'fulfilled' => function (ResponseInterface $response, $index) {},
-        'rejected' => function (RequestException $reason, $index) {
+        'rejected' => function (RequestException $reason, $index) use ($logger) {
           // Log a user friendly message.
           $this->messenger
             ->addError('Something went wrong while syncing data to subsite.');
           // Then log debugging data.
-          $this->loggerChannelFactory->get('multisite_helper')->debug($reason->getMessage());
+          $logger->debug($reason->getMessage());
         },
       ]);
 
@@ -202,24 +203,20 @@ class MultisiteHelper implements MultisiteHelperInterface {
         ->addError('Something went wrong while syncing data to subsite.');
 
       // Then log debugging data.
-      $this->loggerChannelFactory
-        ->get('multisite_helper')
-        ->debug($e->getMessage());
+      $logger->debug($e->getMessage());
 
       $result = FALSE;
     }
 
-    $this->loggerChannelFactory
-      ->get('multisite_helper')
-      ->info($this->t('The @plugin_id item has been processed.', ['@plugin_id' => $plugin_id]));
+    $logger->info($this->t('The @plugin_id item has been processed.', ['@plugin_id' => $plugin_id]));
 
     return $result;
   }
 
   /**
-   * Retrieves the entity processor plugin.
+   * {@inheritDoc}
    */
-  private function getEntityProcessor(): MultisiteHelperEntityProcessorInterface {
+  public function getEntityProcessor(): MultisiteHelperEntityProcessorInterface {
     if (empty($this->entityProcessor)) {
       $plugin_id = $this->config->get('entity_processor');
       $this->entityProcessor = $this->entityProcessorPluginManager->createInstance($plugin_id);

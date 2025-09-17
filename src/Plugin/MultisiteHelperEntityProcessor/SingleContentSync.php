@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 #[MultisiteHelperEntityProcessor(
   id: 'single_content_sync',
-  label: new TranslatableMarkup('Single Content Sync importer/exporter'),
+  label: new TranslatableMarkup('Single Content Sync'),
   description: new TranslatableMarkup('Uses the import/export functionality of the single content sync module, supports complex entities.'),
   module_dependencies: ['single_content_sync'],
 )]
