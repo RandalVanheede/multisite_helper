@@ -57,14 +57,15 @@ final class MhSubsiteForm extends EntityForm {
       '#required' => TRUE,
     ];
 
-    $authorization_string = $this->entity->get('authorization') ?: '';
-    if (empty($authorization) && str_contains($authorization_string, ':')) {
+    $authorization_string = $this->entity->get('authorization') ?: NULL;
+    if (!empty($authorization_string) && str_contains($authorization_string, ':')) {
       [$user, $pass] = explode(':', $authorization_string, 2);
     }
 
     $form['authorization'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => $this->t('HTTP Authorization'),
+      '#open' => !empty($authorization_string),
     ];
 
     $form['authorization']['user'] = [
