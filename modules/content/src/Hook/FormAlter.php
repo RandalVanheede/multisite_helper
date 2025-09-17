@@ -128,7 +128,7 @@ class FormAlter {
         '#value' => new FormattableMarkup(
           'Edit this item on the source website: <a href=":link">:title</a>',
           [
-            ':link' => $source_site->get('url') . $relative_url,
+            ':link' => $source_site->url() . $relative_url,
             ':title' => $source_site->label(),
           ],
         ),

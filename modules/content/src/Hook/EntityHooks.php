@@ -42,15 +42,11 @@ class EntityHooks {
     }
 
     // Calculate the sites and deleted sites lists.
-    $sites = array_map(function (MhSubsiteInterface $subsite) {
-      return $subsite->get('url');
-    }, $node->get('mh_sites')->referencedEntities());
+    $sites = $node->get('mh_sites')->referencedEntities();
     $deleted_sites = [];
     if ($original) {
-      $original_sites = array_map(function (MhSubsiteInterface $subsite) {
-        return $subsite->get('url');
-      }, $original->get('mh_sites')->referencedEntities());
-      $deleted_sites = array_diff($original_sites, $sites);
+      $original_sites = $original->get('mh_sites')->referencedEntities();
+      $deleted_sites = array_diff_key($original_sites, $sites);
     }
 
     // Grab the node values and add the custom mh_sync values.
@@ -63,7 +59,7 @@ class EntityHooks {
       ],
     ];
     $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
-    $node_values = $this->helper->exportEntity($node, $extra_data);
+    $node_values = $this->helper->getEntityProcessor()->exportEntity($node, $extra_data);
     if (empty($extra_data['mh_sync_menu_link'][0]['value'])) {
       unset($node_values['menu_link']);
       unset($node_values['base_fields']['menu_link']);
@@ -90,7 +86,7 @@ class EntityHooks {
 
     // Calculate the sites list.
     $sites = array_map(function (MhSubsiteInterface $subsite) {
-      return $subsite->get('url');
+      return $subsite->url();
     }, $node->get('mh_sites')->referencedEntities());
 
     // Grab the node values and add the custom mh_sync values.
@@ -103,7 +99,7 @@ class EntityHooks {
       ],
     ];
     $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
-    $node_values = $this->helper->exportEntity($node, $extra_data);
+    $node_values = $this->helper->getEntityProcessor()->exportEntity($node, $extra_data);
     if (empty($form_values['mh_sync_menu_link']['value'])) {
       unset($node_values['menu_link']);
       unset($node_values['base_fields']['menu_link']);

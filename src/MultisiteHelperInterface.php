@@ -2,8 +2,6 @@
 
 namespace Drupal\multisite_helper;
 
-use Drupal\Core\Entity\ContentEntityInterface;
-
 interface MultisiteHelperInterface {
 
   /**
@@ -17,54 +15,21 @@ interface MultisiteHelperInterface {
   public function getCurrentSiteId(): ?string;
 
   /**
-   * Retrieves the current subsite label.
-   */
-  public function getCurrentSiteLabel(): ?string;
-
-  /**
-   * Returns the hostname for a given sitename.
-   */
-  public function getHostnameForSite(string $site_id): string|bool;
-
-  /**
    * Retrieves the other subsites' hostnames.
+   *
+   * @return \Drupal\multisite_helper\MhSubsiteInterface[]
    */
-  public function getOtherSiteHostnames(): array;
+  public function getOtherSubsites(): array;
 
   /**
    * Sends data to the given set of sites.
    */
-  public function sendToSites(string $plugin_id, array $data, array $sites): bool;
-
-  /**
-   * Removes data from the given set of sites.
-   */
-  public function removeFromSites(string $plugin_id, array $data, array $sites): bool;
+  public function sendToSites(string $method, string $plugin_id, array $data, array $sites): bool;
 
   /**
    * Retrieves the entity processor plugin.
    */
   public function getEntityProcessor(): MultisiteHelperEntityProcessorInterface;
-
-  /**
-   * This method returns the entity type and uuid of the entity.
-   */
-  public function getEntityBaseInformation(array $data): array;
-
-  /**
-   * Imports the given data as an entity.
-   */
-  public function importEntity(array $data): bool;
-
-  /**
-   * Exports the given entity to plain array data.
-   */
-  public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array;
-
-  /**
-   * Deletes an entity based on the import data.
-   */
-  public function deleteEntity(array $data): bool;
 
   /**
    * Set the importing flag to the class.

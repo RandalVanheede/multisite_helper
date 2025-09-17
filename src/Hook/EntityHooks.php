@@ -45,7 +45,7 @@ class EntityHooks {
       return;
     }
 
-    $entity_values = $this->helper->exportEntity($entity);
+    $entity_values = $this->helper->getEntityProcessor()->exportEntity($entity);
     $plugin->{$action}($entity_values);
   }
 

@@ -11,4 +11,14 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  */
 interface MhSubsiteInterface extends ConfigEntityInterface {
 
+  /**
+   * Returns the base64 encoded authorization string.
+   */
+  public function authorization(): ?string;
+
+  /**
+   * Returns the subsite's URL.
+   */
+  public function url(): string;
+
 }

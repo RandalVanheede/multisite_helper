@@ -45,7 +45,7 @@ class EntityHooks {
     $extra_data = [
       'status' => [['value' => (int) $term->isPublished()]],
     ];
-    $term_values = $this->helper->exportEntity($term, $extra_data);
+    $term_values = $this->helper->getEntityProcessor()->exportEntity($term, $extra_data);
     $plugin->{$action}($term_values);
   }
 

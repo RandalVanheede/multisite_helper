@@ -5,7 +5,6 @@ namespace Drupal\multisite_helper;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -60,12 +59,19 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   public function getCurrentSite(): ?MhSubsiteInterface {
     if (empty(static::$currentSubsite)) {
-      $scheme_and_host = $this->requestStack->getCurrentRequest()
-        ->getSchemeAndHttpHost();
+      $host = $this->requestStack->getCurrentRequest()->getHttpHost();
+
+      // Find subsites with http and https.
       $subsites = $this->entityTypeManager
         ->getStorage('mh_subsite')
-        ->loadByProperties(['url' => $scheme_and_host]);
+        ->loadByProperties([
+          'url' => [
+            'http://' . $host,
+            'https://' . $host,
+          ],
+        ]);
 
+      // Assign the first result as the current subsite.
       static::$currentSubsite = reset($subsites) ?: NULL;
     }
 
@@ -82,46 +88,27 @@ class MultisiteHelper implements MultisiteHelperInterface {
   /**
    * {@inheritDoc}
    */
-  public function getCurrentSiteLabel(): ?string {
-    return $this->getCurrentSite()?->label();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function getHostnameForSite(string $site_id): string|bool {
-    $subsite = $this->entityTypeManager
-      ->getStorage('mh_subsite')
-      ->load($site_id);
-    return $subsite ? $subsite->label() : FALSE;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function getOtherSiteHostnames(): array {
-    $scheme_and_host = $this->requestStack->getCurrentRequest()
-      ->getSchemeAndHttpHost();
+  public function getOtherSubsites(int $status = MhSubsite::ENABLED): array {
     $storage = $this->entityTypeManager->getStorage('mh_subsite');
+
+    $host = $this->requestStack->getCurrentRequest()->getHttpHost();
     $subsite_ids = $storage->getQuery()
-      ->condition('status', MhSubsite::ENABLED)
-      ->condition('url', $scheme_and_host, '<>')
+      ->condition('status', $status)
+      ->condition('url', ['http://' . $host, 'https://' . $host], 'NOT IN')
       ->sort('weight')
       ->execute();
 
-    return array_values(array_filter(array_map(static function ($subsite_id) use ($storage) {
-      $subsite = $storage->load($subsite_id);
-      return $subsite?->get('url');
-    }, $subsite_ids)));
+    return $storage->loadMultiple($subsite_ids);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function sendToSites(string $plugin_id, array $data, array $sites): bool {
+  public function sendToSites(string $method, string $plugin_id, array $data, array $sites): bool {
     // Force remove the current site from the list of sites.
-    $scheme_and_host = $this->requestStack->getCurrentRequest()->getSchemeAndHttpHost();
-    if ($current_site_delta = array_search($scheme_and_host, $sites)) {
+    $host = $this->requestStack->getCurrentRequest()->getHttpHost();
+    if (($current_site_delta = array_search('http://' . $host, $sites))
+      || $current_site_delta = array_search('https://' . $host, $sites)) {
       unset($sites[$current_site_delta]);
     }
 
@@ -133,52 +120,24 @@ class MultisiteHelper implements MultisiteHelperInterface {
 
     // Build the requests to be sent.
     $requests = [];
-    foreach ($sites as $hostname) {
-      $requests[$hostname] = new Request(
-        method: 'POST',
-        uri: $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
+    /** @var \Drupal\multisite_helper\MhSubsiteInterface[] $sites */
+    foreach ($sites as $site) {
+      $headers = [];
+      if ($auth = $site->authorization()) {
+        $headers['Authorization'] = 'Basic: ' . $auth;
+      }
+
+      $requests[$site->url()] = new Request(
+        method: $method,
+        uri: $site->url() . '/api/multisite-helper/sync-data/' . $plugin_id,
         headers: [
           'Content-Type' => 'application/json',
           'X-Api-Key' => $this->config->get('api_key'),
-        ],
+        ] + $headers,
         body: Json::encode($data),
       );
     }
 
-    return $this->sendAsyncRequests($plugin_id, $requests);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function removeFromSites(string $plugin_id, array $data, array $sites): bool {
-    // Allow the plugin data and sites array to be altered.
-    $event = new AlterPluginDataEvent($plugin_id, $data, $sites);
-    $this->eventDispatcher->dispatch($event, MultisiteHelperEvents::ALTER_PLUGIN_DATA);
-    $data = $event->getPluginData();
-    $sites = $event->getSites();
-
-    // Build the requests to be sent.
-    $requests = [];
-    foreach ($sites as $hostname) {
-      $requests[$hostname] = new Request(
-        method: 'DELETE',
-        uri: $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
-        headers: [
-          'Content-Type' => 'application/json',
-          'X-Api-Key' => $this->config->get('api_key'),
-        ],
-        body: Json::encode($data),
-      );
-    }
-
-    return $this->sendAsyncRequests($plugin_id, $requests);
-  }
-
-  /**
-   * Sends a set of predefined requests asynchronously.
-   */
-  private function sendAsyncRequests(string $plugin_id, array $requests): bool {
     $result = TRUE;
     $logger = $this->loggerChannelFactory->get('multisite_helper');
 
@@ -188,8 +147,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
         'fulfilled' => function (ResponseInterface $response, $index) {},
         'rejected' => function (RequestException $reason, $index) use ($logger) {
           // Log a user friendly message.
-          $this->messenger
-            ->addError('Something went wrong while syncing data to subsite.');
+          $this->messenger->addError('Something went wrong while syncing data to subsite.');
           // Then log debugging data.
           $logger->debug($reason->getMessage());
         },
@@ -199,8 +157,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     }
     catch (\Exception|\Throwable $e) {
       // Log a user friendly message.
-      $this->messenger
-        ->addError('Something went wrong while syncing data to subsite.');
+      $this->messenger->addError('Something went wrong while syncing data to subsite.');
 
       // Then log debugging data.
       $logger->debug($e->getMessage());
@@ -223,34 +180,6 @@ class MultisiteHelper implements MultisiteHelperInterface {
     }
 
     return $this->entityProcessor;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function getEntityBaseInformation(array $data): array {
-    return $this->getEntityProcessor()->getEntityBaseInformation($data);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function importEntity(array $data): bool {
-    return $this->getEntityProcessor()->importEntity($data);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array {
-    return $this->getEntityProcessor()->exportEntity($entity, $extra_data);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function deleteEntity(array $data): bool {
-    return $this->getEntityProcessor()->deleteEntity($data);
   }
 
   /**

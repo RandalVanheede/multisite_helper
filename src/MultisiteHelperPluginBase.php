@@ -157,7 +157,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     }
 
     $sites = $sites === NULL
-      ? $this->helper->getOtherSiteHostnames()
+      ? $this->helper->getOtherSubsites()
       : $sites;
 
     /** @var \Drupal\multisite_helper\MultisiteHelperProcessingMethodInterface $processing_method */
@@ -179,7 +179,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     }
 
     $sites = $sites === NULL
-      ? $this->helper->getOtherSiteHostnames()
+      ? $this->helper->getOtherSubsites()
       : $sites;
 
     /** @var \Drupal\multisite_helper\MultisiteHelperProcessingMethodInterface $processing_method */
@@ -193,24 +193,11 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
    * {@inheritDoc}
    */
   public function receive(array $data, string $action): bool {
-    switch ($action) {
-      case 'PUT':
-      case 'POST':
-        if ($this->helper->importEntity($data)) {
-          return TRUE;
-        }
-        return FALSE;
-
-      case 'DELETE':
-        // Check if there is an existing entity with the identical uuid.
-        $entity = $this->entityRepository->loadEntityByUuid($data['entity_type'], $data['uuid']);
-        if ($entity?->delete()) {
-          return TRUE;
-        }
-        return FALSE;
-    }
-
-    return FALSE;
+    return match ($action) {
+      'PUT', 'POST' => $this->helper->getEntityProcessor()->importEntity($data),
+      'DELETE' => $this->helper->getEntityProcessor()->deleteEntity($data),
+      default => FALSE,
+    };
   }
 
 }

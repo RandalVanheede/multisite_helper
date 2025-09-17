@@ -32,14 +32,14 @@ final class Direct extends MultisiteHelperProcessingMethodPluginBase {
    * {@inheritDoc}
    */
   public function send(string $plugin_id, array $data, array $sites = []): bool {
-    return $this->helper->sendToSites($plugin_id, $data, $sites);
+    return $this->helper->sendToSites('POST', $plugin_id, $data, $sites);
   }
 
   /**
    * {@inheritDoc}
    */
   public function remove(string $plugin_id, array $data, array $sites = []): bool {
-    return $this->helper->removeFromSites($plugin_id, $data, $sites);
+    return $this->helper->sendToSites('DELETE', $plugin_id, $data, $sites);
   }
 
 }

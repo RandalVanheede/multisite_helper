@@ -31,11 +31,15 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
   public function buildRow(EntityInterface $entity): array {
     /** @var \Drupal\multisite_helper\MhSubsiteInterface $entity */
     $row['subsite'] = $entity->label() . ' (' . $entity->id() . ')';
-    $row['url'] = $entity->get('url');
+    $row['url'] = $entity->url();
     $row['status'] = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
-    $row['accessible'] = MultisiteHelper::ping($entity->get('url')) ? '✔' : '✖';
+    $row['accessible'] = MultisiteHelper::ping($entity->url()) ? '✔' : '✖';
 
-    if (\Drupal::request()->getSchemeAndHttpHost() === $row['url']) {
+    $host = \Drupal::request()->getHttpHost();
+    if (in_array($row['url'], [
+      'http://' . $host,
+      'https://' . $host,
+    ])) {
       foreach ($row as &$row_item) {
         $row_item = Markup::create("<strong>$row_item</strong>");
       }

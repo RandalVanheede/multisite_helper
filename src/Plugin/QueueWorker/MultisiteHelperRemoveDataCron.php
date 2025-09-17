@@ -2,43 +2,15 @@
 
 namespace Drupal\multisite_helper\Plugin\QueueWorker;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\Attribute\QueueWorker;
-use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\multisite_helper\MultisiteHelperInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 #[QueueWorker(
   id: 'multisite_helper_remove_data_cron',
   title: new TranslatableMarkup('Remove Multisite Helper plugin data'),
   cron: ['time' => 60],
 )]
-class MultisiteHelperRemoveDataCron extends QueueWorkerBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * {@inheritDoc}
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    private readonly MultisiteHelperInterface $helper,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('multisite_helper'),
-    );
-  }
+class MultisiteHelperRemoveDataCron extends MultisiteHelperQueueWorkerBase {
 
   /**
    * {@inheritDoc}
@@ -51,9 +23,9 @@ class MultisiteHelperRemoveDataCron extends QueueWorkerBase implements Container
 
     $plugin_id = $data['plugin_id'];
     $plugin_data = $data['plugin_data'];
-    $sites = $data['sites'];
+    $sites = $this->loadSubsiteEntities($data['sites']);
 
-    $this->helper->removeFromSites($plugin_id, $plugin_data, $sites);
+    $this->helper->sendToSites('DELETE', $plugin_id, $plugin_data, $sites);
   }
 
 }

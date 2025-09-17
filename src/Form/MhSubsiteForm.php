@@ -53,8 +53,30 @@ final class MhSubsiteForm extends EntityForm {
       '#type' => 'url',
       '#title' => $this->t('URL'),
       '#description' => $this->t('The base URL for the website, without trailing slash.'),
-      '#default_value' => $this->entity->get('url'),
+      '#default_value' => $this->entity->url(),
       '#required' => TRUE,
+    ];
+
+    $authorization_string = $this->entity->get('authorization') ?: '';
+    if (empty($authorization) && str_contains($authorization_string, ':')) {
+      [$user, $pass] = explode(':', $authorization_string, 2);
+    }
+
+    $form['authorization'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('HTTP Authorization'),
+    ];
+
+    $form['authorization']['user'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Username'),
+      '#default_value' => $user ?? NULL,
+    ];
+
+    $form['authorization']['pass'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Password'),
+      '#default_value' => $pass ?? NULL,
     ];
 
     return $form;
@@ -66,6 +88,13 @@ final class MhSubsiteForm extends EntityForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = &$form_state->getValues();
     $values['url'] = rtrim($values['url'], '/');
+
+    if (isset($values['user'], $values['pass'])) {
+      $values['authorization'] = $values['user'] . ':' . $values['pass'];
+    }
+    else {
+      $values['authorization'] = NULL;
+    }
 
     parent::submitForm($form, $form_state);
   }

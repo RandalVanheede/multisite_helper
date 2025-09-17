@@ -7,6 +7,7 @@ namespace Drupal\multisite_helper\Plugin\MultisiteHelperProcessingMethod;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\multisite_helper\Attribute\MultisiteHelperProcessingMethod;
+use Drupal\multisite_helper\MhSubsiteInterface;
 use Drupal\multisite_helper\MultisiteHelperProcessingMethodPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -32,6 +33,10 @@ final class Queue extends MultisiteHelperProcessingMethodPluginBase {
    * {@inheritDoc}
    */
   public function send(string $plugin_id, array $data, array $sites = []): bool {
+    $sites = array_map(static function (MhSubsiteInterface $site) {
+      return $site->id();
+    }, $sites);
+
     $this->queueFactory
       ->get('multisite_helper_send_data')
       ->createItem([
@@ -47,6 +52,10 @@ final class Queue extends MultisiteHelperProcessingMethodPluginBase {
    * {@inheritDoc}
    */
   public function remove(string $plugin_id, array $data, array $sites = []): bool {
+    $sites = array_map(static function (MhSubsiteInterface $site) {
+      return $site->id();
+    }, $sites);
+
     $this->queueFactory
       ->get('multisite_helper_remove_data')
       ->createItem([

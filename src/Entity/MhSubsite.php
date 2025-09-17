@@ -53,6 +53,7 @@ use Drupal\multisite_helper\MhSubsiteListBuilder;
     'description',
     'url',
     'weight',
+    'authorization',
   ],
 )]
 final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
@@ -84,5 +85,24 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
    * The subsite weight.
    */
   protected ?int $weight = 0;
+
+  /**
+   * The authorization required to access the subsite.
+   */
+  protected string $authorization;
+
+  /**
+   * {@inheritDoc}
+   */
+  public function authorization(): ?string {
+    return $this->authorization ? base64_encode($this->authorization) : NULL;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function url(): string {
+    return $this->url;
+  }
 
 }

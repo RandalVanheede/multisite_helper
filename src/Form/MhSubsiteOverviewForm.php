@@ -69,14 +69,14 @@ class MhSubsiteOverviewForm extends FormBase {
       $entity = $storage->load($subsite_id);
       $form['table'][$entity->id()] = [
         'subsite' => ['#markup' => $entity->label() . ' (' . $entity->id() . ')'],
-        'url' => ['#markup' => $entity->get('url')],
+        'url' => ['#markup' => $entity->url()],
         'status' => [
           '#type' => 'checkbox',
           '#title' => $this->t('Status'),
           '#title_display' => 'invisible',
           '#default_value' => $entity->status(),
         ],
-        'accessible' => ['#markup' => MultisiteHelper::ping($entity->get('url')) ? '✔' : '✖'],
+        'accessible' => ['#markup' => MultisiteHelper::ping($entity->url()) ? '✔' : '✖'],
         'weight' => [
           '#type' => 'weight',
           '#delta' => count($subsite_ids),

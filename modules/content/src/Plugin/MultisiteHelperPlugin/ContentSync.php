@@ -23,7 +23,7 @@ final class ContentSync extends MultisiteHelperPluginBase {
    * {@inheritDoc}
    */
   public function receive(array $data, string $action): bool {
-    ['uuid' => $uuid] = $this->helper->getEntityBaseInformation($data);
+    ['uuid' => $uuid] = $this->helper->getEntityProcessor()->getEntityBaseInformation($data);
 
     $node = $this->entityRepository->loadEntityByUuid('node', $uuid);
     if ($node) {
