@@ -85,13 +85,10 @@ class FormAlter {
     $subsite_ids = $storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('status', MhSubsite::ENABLED)
+      ->condition('id', $current_site, '<>')
       ->sort('weight')
       ->execute();
     foreach ($subsite_ids as $subsite_id) {
-      if ($subsite_id === $current_site) {
-        continue;
-      }
-
       $subsite = $storage->load($subsite_id);
       $form['mh_sites']['widget']['#options'][$subsite_id] = $subsite->label();
     }

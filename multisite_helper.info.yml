@@ -1,6 +1,6 @@
 name: 'Multisite Helper'
-description: 'Adds a lot of functionality to support multisites'
+description: 'Adds a lot of functionality to support synchronization of content between subsites'
 package: 'Multisite'
 type: module
-core_version_requirement: ^10.4 || ^11.1
+core_version_requirement: ^11.1
 configure: multisite_helper.settings

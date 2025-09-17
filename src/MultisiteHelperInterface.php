@@ -7,14 +7,19 @@ use Drupal\Core\Entity\ContentEntityInterface;
 interface MultisiteHelperInterface {
 
   /**
+   * Retrieves the current subsite.
+   */
+  public function getCurrentSite(): ?MhSubsiteInterface;
+
+  /**
    * Retrieves the current subsite id.
    */
-  public function getCurrentSiteId(): string|bool;
+  public function getCurrentSiteId(): ?string;
 
   /**
    * Retrieves the current subsite label.
    */
-  public function getCurrentSiteLabel(): string|bool;
+  public function getCurrentSiteLabel(): ?string;
 
   /**
    * Returns the hostname for a given sitename.
@@ -25,11 +30,6 @@ interface MultisiteHelperInterface {
    * Retrieves the other subsites' hostnames.
    */
   public function getOtherSiteHostnames(): array;
-
-  /**
-   * Retrieves the other subsites formatted as an options array.
-   */
-  public static function getOtherSitesAsOptions(): array;
 
   /**
    * Sends data to the given set of sites.

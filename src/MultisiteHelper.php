@@ -12,10 +12,13 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\multisite_helper\Entity\MhSubsite;
+use Drupal\multisite_helper\Event\AlterPluginDataEvent;
+use Drupal\multisite_helper\Event\MultisiteHelperEvents;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -28,6 +31,8 @@ class MultisiteHelper implements MultisiteHelperInterface {
    * to prevent infinite save/delete loops.
    */
   private static bool $isImporting = FALSE;
+
+  private static ?MhSubsiteInterface $currentSubsite;
 
   private MultisiteHelperEntityProcessorInterface $entityProcessor;
 
@@ -45,6 +50,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     private readonly MultisiteHelperEntityProcessorPluginManager $entityProcessorPluginManager,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly RequestStack $requestStack,
+    private readonly EventDispatcherInterface $eventDispatcher,
   ) {
     $this->config = $this->configFactory->get('multisite_helper.settings');
   }
@@ -52,27 +58,32 @@ class MultisiteHelper implements MultisiteHelperInterface {
   /**
    * {@inheritDoc}
    */
-  public function getCurrentSiteId(): string|bool {
-    $scheme_and_host = $this->requestStack->getCurrentRequest()
-      ->getSchemeAndHttpHost();
-    $subsites = $this->entityTypeManager
-      ->getStorage('mh_subsite')
-      ->loadByProperties(['url' => $scheme_and_host]);
-    $subsite = reset($subsites);
-    return $subsite ? $subsite->id() : FALSE;
+  public function getCurrentSite(): ?MhSubsiteInterface {
+    if (empty(static::$currentSubsite)) {
+      $scheme_and_host = $this->requestStack->getCurrentRequest()
+        ->getSchemeAndHttpHost();
+      $subsites = $this->entityTypeManager
+        ->getStorage('mh_subsite')
+        ->loadByProperties(['url' => $scheme_and_host]);
+
+      static::$currentSubsite = reset($subsites) ?: NULL;
+    }
+
+    return static::$currentSubsite;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function getCurrentSiteLabel(): string|bool {
-    $scheme_and_host = $this->requestStack->getCurrentRequest()
-      ->getSchemeAndHttpHost();
-    $subsites = $this->entityTypeManager
-      ->getStorage('mh_subsite')
-      ->loadByProperties(['url' => $scheme_and_host]);
-    $subsite = reset($subsites);
-    return $subsite ? $subsite->label() : FALSE;
+  public function getCurrentSiteId(): ?string {
+    return $this->getCurrentSite()?->id();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getCurrentSiteLabel(): ?string {
+    return $this->getCurrentSite()?->label();
   }
 
   /**
@@ -95,29 +106,13 @@ class MultisiteHelper implements MultisiteHelperInterface {
     $subsite_ids = $storage->getQuery()
       ->condition('status', MhSubsite::ENABLED)
       ->condition('url', $scheme_and_host, '<>')
+      ->sort('weight')
       ->execute();
 
-    return array_values(array_filter(array_map(function ($subsite_id) use ($storage) {
+    return array_values(array_filter(array_map(static function ($subsite_id) use ($storage) {
       $subsite = $storage->load($subsite_id);
-      return $subsite ? $subsite->get('url') : NULL;
+      return $subsite?->get('url');
     }, $subsite_ids)));
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public static function getOtherSitesAsOptions(): array {
-    $scheme_and_host = \Drupal::request()->getSchemeAndHttpHost();
-    $storage = \Drupal::entityTypeManager()->getStorage('mh_subsite');
-    $subsite_ids = $storage->getQuery()
-      ->condition('status', MhSubsite::ENABLED)
-      ->condition('url', $scheme_and_host, '<>')
-      ->execute();
-
-    return array_filter(array_map(function ($subsite_id) use ($storage) {
-      $subsite = $storage->load($subsite_id);
-      return $subsite ? $subsite->label() : NULL;
-    }, $subsite_ids));
   }
 
   /**
@@ -131,9 +126,12 @@ class MultisiteHelper implements MultisiteHelperInterface {
     }
 
     // Allow the plugin data and sites array to be altered.
-    $plugin_id_copy = $plugin_id;
-    $this->moduleHandler->alter('multisite_helper_plugin_data', $data, $sites, $plugin_id_copy);
+    $event = new AlterPluginDataEvent($plugin_id, $data, $sites);
+    $this->eventDispatcher->dispatch($event, MultisiteHelperEvents::ALTER_PLUGIN_DATA);
+    $data = $event->getPluginData();
+    $sites = $event->getSites();
 
+    // Build the requests to be sent.
     $requests = [];
     foreach ($sites as $hostname) {
       $requests[$hostname] = new Request(
@@ -147,7 +145,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
       );
     }
 
-    return $this->sendAsyncRequests($plugin_id_copy, $requests);
+    return $this->sendAsyncRequests($plugin_id, $requests);
   }
 
   /**
@@ -155,14 +153,17 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   public function removeFromSites(string $plugin_id, array $data, array $sites): bool {
     // Allow the plugin data and sites array to be altered.
-    $plugin_id_copy = $plugin_id;
-    $this->moduleHandler->alter('multisite_helper_plugin_data', $data, $sites, $plugin_id_copy);
+    $event = new AlterPluginDataEvent($plugin_id, $data, $sites);
+    $this->eventDispatcher->dispatch($event, MultisiteHelperEvents::ALTER_PLUGIN_DATA);
+    $data = $event->getPluginData();
+    $sites = $event->getSites();
 
+    // Build the requests to be sent.
     $requests = [];
     foreach ($sites as $hostname) {
       $requests[$hostname] = new Request(
         method: 'DELETE',
-        uri: 'https://' . $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
+        uri: $hostname . '/api/multisite-helper/sync-data/' . $plugin_id,
         headers: [
           'Content-Type' => 'application/json',
           'X-Api-Key' => $this->config->get('api_key'),
@@ -171,7 +172,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
       );
     }
 
-    return $this->sendAsyncRequests($plugin_id_copy, $requests);
+    return $this->sendAsyncRequests($plugin_id, $requests);
   }
 
   /**
