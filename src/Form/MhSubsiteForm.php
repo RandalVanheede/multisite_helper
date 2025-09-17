@@ -90,11 +90,11 @@ final class MhSubsiteForm extends EntityForm {
     $values = &$form_state->getValues();
     $values['url'] = rtrim($values['url'], '/');
 
-    if (isset($values['user'], $values['pass'])) {
+    if (!empty($values['user']) && !empty($values['pass'])) {
       $values['authorization'] = $values['user'] . ':' . $values['pass'];
     }
     else {
-      $values['authorization'] = NULL;
+      $values['authorization'] = '';
     }
 
     parent::submitForm($form, $form_state);
