@@ -95,14 +95,20 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
    * {@inheritDoc}
    */
   public function authorization(): ?string {
-    return $this->authorization ? base64_encode($this->authorization) : NULL;
+    if (isset($this->authorization)) {
+      return $this->authorization ? base64_encode($this->authorization) : NULL;
+    }
+    return NULL;
   }
 
   /**
    * {@inheritDoc}
    */
-  public function url(): string {
-    return $this->url;
+  public function url(): ?string {
+    if (isset($this->url)) {
+      return $this->url;
+    }
+    return NULL;
   }
 
 }

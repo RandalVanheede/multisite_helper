@@ -19,6 +19,6 @@ interface MhSubsiteInterface extends ConfigEntityInterface {
   /**
    * Returns the subsite's URL.
    */
-  public function url(): string;
+  public function url(): ?string;
 
 }
