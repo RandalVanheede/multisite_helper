@@ -9,7 +9,7 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\search_api\Plugin\PluginFormTrait;
+use Drupal\multisite_helper\Plugin\PluginFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
