@@ -1,0 +1,9 @@
+name: 'Multisite Helper - Complex serializer'
+description: 'Adds a complex entity processor plugin, heavily inspired by the single content sync module.'
+package: 'Multisite'
+type: module
+core_version_requirement: ^11.1
+configure: multisite_helper.settings
+dependencies:
+  - multisite_helper:multisite_helper
+  - drupal:serialization

@@ -1,0 +1,18 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  plugin.manager.entity_type:
+    class: Drupal\multisite_helper_complex_serializer\EntityTypePluginManager
+    parent: default_plugin_manager
+  Drupal\multisite_helper_complex_serializer\EntityTypePluginManager: '@plugin.manager.entity_type'
+
+  plugin.manager.field_type:
+    class: Drupal\multisite_helper_complex_serializer\FieldTypePluginManager
+    parent: default_plugin_manager
+  Drupal\multisite_helper_complex_serializer\FieldTypePluginManager: '@plugin.manager.field_type'
+
+  multisite_helper.serializer:
+    class: Drupal\multisite_helper_complex_serializer\Serializer
+  Drupal\multisite_helper_complex_serializer\SerializerInterface: '@multisite_helper.serializer'
