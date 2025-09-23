@@ -89,7 +89,7 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
   /**
    * The authorization required to access the subsite.
    */
-  protected string $authorization;
+  protected ?string $authorization = NULL;
 
   /**
    * {@inheritDoc}
