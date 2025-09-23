@@ -24,3 +24,7 @@ services:
     class: Drupal\multisite_helper\MultisiteHelperEntityProcessorPluginManager
     parent: default_plugin_manager
   Drupal\multisite_helper\MultisiteHelperEntityProcessorPluginManager: '@plugin.manager.multisite_helper_entity_processor'
+
+  # Event subscribers
+  multisite_helper.event_subscriber.single_content_sync:
+    class: Drupal\multisite_helper\EventSubscriber\SingleContentSyncEventSubscriber

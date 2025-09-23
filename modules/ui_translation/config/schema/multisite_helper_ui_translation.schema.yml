@@ -1,0 +1,6 @@
+multisite_helper.plugin.ui_translation_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    changed:
+      type: boolean
+      label: 'Also synchronize changed translations'

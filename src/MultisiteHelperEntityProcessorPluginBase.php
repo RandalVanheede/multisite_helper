@@ -47,6 +47,8 @@ abstract class MultisiteHelperEntityProcessorPluginBase extends PluginBase imple
     return [
       'uuid' => $data['uuid'],
       'entity_type' => $data['entity_type'],
+      'is_translation' => $data['is_translation'],
+      'language' => $data['language'],
     ];
   }
 

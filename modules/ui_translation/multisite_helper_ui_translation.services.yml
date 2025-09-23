@@ -1,0 +1,7 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  multisite_helper_ui_translation.event_subscriber.locale:
+    class: Drupal\multisite_helper_ui_translation\EventSubscriber\LocaleEventSubscriber
