@@ -79,6 +79,12 @@ final class Basic extends MultisiteHelperEntityProcessorPluginBase {
       $entity = $storage->create($init_data);
     }
 
+    if ($data['is_translation']) {
+      $entity = $entity->hasTranslation($data['language'])
+        ? $entity->getTranslation($data['language'])
+        : $entity->addTranslation($data['language'], $entity->toArray());
+    }
+
     $revision_field = $entity_type->hasKey('revision')
       ? $entity_type->getKey('revision')
       : NULL;
@@ -104,6 +110,8 @@ final class Basic extends MultisiteHelperEntityProcessorPluginBase {
       'entity_type' => $entity_type->id(),
       'bundle' => $entity_type->id(),
       'uuid' => $entity->uuid(),
+      'is_translation' => !$entity->isDefaultTranslation(),
+      'language' => $entity->language()->getId(),
       'fields' => [],
     ];
 

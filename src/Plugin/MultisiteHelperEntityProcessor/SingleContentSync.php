@@ -51,6 +51,8 @@ final class SingleContentSync extends MultisiteHelperEntityProcessorPluginBase {
    */
   public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array {
     $entity_data = $this->contentExporter->doExportToArray($entity);
+    $entity_data['is_translation'] = !$entity->isDefaultTranslation();
+    $entity_data['language'] = $entity->language()->getId();
     // Add extra data to the custom_fields array item.
     $entity_data['custom_fields'] = NestedArray::mergeDeepArray([$entity_data['custom_fields'], $extra_data], TRUE);
     return $entity_data;
