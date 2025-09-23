@@ -7,6 +7,7 @@ namespace Drupal\multisite_helper_complex_serializer;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\multisite_helper_complex_serializer\Enum\EntityType;
@@ -19,12 +20,18 @@ abstract class EntityTypePluginBase extends PluginBase implements EntityTypeInte
 
   protected readonly EntityTypeManagerInterface $entityTypeManager;
 
+  protected readonly EntityRepositoryInterface $entityRepository;
+
+  protected readonly FieldTypePluginManager $fieldTypePluginManager;
+
   /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityRepository = $container->get('entity.repository');
+    $instance->fieldTypePluginManager = $container->get('plugin.manager.field_type');
     return $instance;
   }
 
@@ -40,13 +47,7 @@ abstract class EntityTypePluginBase extends PluginBase implements EntityTypeInte
    * {@inheritDoc}
    */
   public function import(array $data): bool|EntityInterface {
-    try {
-      $storage = $this->entityTypeManager->getStorage($data['entity_type']);
-      return $storage->create($data['fields']);
-    }
-    catch (\Exception $e) {
-      return FALSE;
-    }
+    return $this->getEntity($data);
   }
 
   /**
@@ -74,6 +75,32 @@ abstract class EntityTypePluginBase extends PluginBase implements EntityTypeInte
       'bundle' => method_exists($entity, 'bundle') ? $entity->bundle() : $entity->getEntityTypeId(),
       'uuid' => $entity->uuid(),
     ];
+  }
+
+  /**
+   * Loads or creates an entity from the given import data.
+   */
+  protected function getEntity(array $data): ?EntityInterface {
+    try {
+      [
+        'uuid' => $uuid,
+        'entity_type' => $entity_type,
+      ] = $data;
+
+      if (!$entity = $this->entityRepository->loadEntityByUuid($entity_type, $uuid)) {
+        $storage = $this->entityTypeManager->getStorage($entity_type);
+        $entity = $storage->create([
+          'uuid' => $uuid,
+        ] + ($data['fields'] ?? []));
+      }
+
+      return $entity;
+    }
+    catch (\Exception $e) {
+      // @todo error logging.
+    }
+
+    return NULL;
   }
 
 }
