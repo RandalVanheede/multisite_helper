@@ -24,14 +24,17 @@ final class Fieldable extends EntityTypePluginBase {
    * {@inheritDoc}
    */
   public function import(array $data): bool|EntityInterface {
-    $entity = $this->getEntity($data);
+    $entity = $this->getEntity($data, stub: FALSE);
 
     foreach ($data['fields'] as $field_name => $field_values) {
       if (isset($field_values['_field_type']) && ($field_type = $field_values['_field_type'])) {
+        unset($field_values['_field_type']);
         $serializer = $this->fieldTypePluginManager->getSerializerForFieldType($field_type);
         $serializer->import($entity, $field_name, $field_values);
       }
     }
+
+    $entity->save();
 
     return $entity;
   }
@@ -40,13 +43,17 @@ final class Fieldable extends EntityTypePluginBase {
    * {@inheritDoc}
    */
   public function export(EntityInterface $entity): array {
-    $values = [];
+    $values = ['fields' => []];
 
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     foreach ($entity->getFieldDefinitions() as $field_name => $field_definition) {
       $field_type = $field_definition->getType();
       $serializer = $this->fieldTypePluginManager->getSerializerForFieldType($field_type);
-      $values[$field_name] = [
+      $field_values = $serializer->export($entity, $field_name);
+      if (!$field_values) {
+        continue;
+      }
+      $values['fields'][$field_name] = [
         '_field_type' => $field_type,
       ] + $serializer->export($entity, $field_name);
     }

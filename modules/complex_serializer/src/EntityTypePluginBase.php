@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\multisite_helper_complex_serializer\Enum\EntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -47,7 +48,18 @@ abstract class EntityTypePluginBase extends PluginBase implements EntityTypeInte
    * {@inheritDoc}
    */
   public function import(array $data): bool|EntityInterface {
-    return $this->getEntity($data);
+    $entity = $this->getEntity($data, stub: FALSE);
+    $entity->save();
+    return $entity;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function importStub(array $data): bool|EntityInterface {
+    $entity = $this->getEntity($data, stub: TRUE);
+    $entity->save();
+    return $entity;
   }
 
   /**
@@ -65,8 +77,15 @@ abstract class EntityTypePluginBase extends PluginBase implements EntityTypeInte
     if ($entity instanceof FieldableEntityInterface) {
       $type = EntityType::FIELDABLE;
     }
-    elseif ($entity instanceof ConfigEntityInterface) {
-      $type = EntityType::CONFIG;
+
+    $extra_data = [
+      'is_translation' => FALSE,
+      'language' => NULL,
+    ];
+
+    if ($entity instanceof TranslatableInterface) {
+      $extra_data['is_translation'] = !$entity->isDefaultTranslation();
+      $extra_data['language'] = $entity->language()->getId();
     }
 
     return [
@@ -74,24 +93,50 @@ abstract class EntityTypePluginBase extends PluginBase implements EntityTypeInte
       'entity_type' => $entity->getEntityTypeId(),
       'bundle' => method_exists($entity, 'bundle') ? $entity->bundle() : $entity->getEntityTypeId(),
       'uuid' => $entity->uuid(),
-    ];
+    ] + $extra_data;
   }
 
   /**
    * Loads or creates an entity from the given import data.
    */
-  protected function getEntity(array $data): ?EntityInterface {
+  protected function getEntity(array $data, bool $stub): ?EntityInterface {
     try {
       [
         'uuid' => $uuid,
         'entity_type' => $entity_type,
+        'bundle' => $bundle,
+        'language' => $language,
+        'is_translation' => $is_translation,
       ] = $data;
 
       if (!$entity = $this->entityRepository->loadEntityByUuid($entity_type, $uuid)) {
         $storage = $this->entityTypeManager->getStorage($entity_type);
-        $entity = $storage->create([
-          'uuid' => $uuid,
-        ] + ($data['fields'] ?? []));
+        $entity_type = $entity->getEntityType();
+
+        $base_data = [
+          $entity_type->getKey('uuid') => $uuid,
+        ];
+        if ($entity_type->hasKey('bundle')) {
+          $base_data[$entity_type->getKey('bundle')] = $bundle;
+        }
+        if ($entity_type->hasKey('langcode')) {
+          $base_data[$entity_type->getKey('langcode')] = $language;
+        }
+
+        if ($stub) {
+          $entity = $storage->create($base_data);
+        }
+        else {
+          $entity = $storage->create($base_data + ($data['fields'] ?? []));
+        }
+      }
+
+      if (!$stub) {
+        if ($is_translation && $entity instanceof TranslatableInterface) {
+          $entity = $entity->hasTranslation($language)
+            ? $entity->getTranslation($language)
+            : $entity->addTranslation($language, $entity->toArray());
+        }
       }
 
       return $entity;

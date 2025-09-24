@@ -9,7 +9,7 @@ interface SerializerInterface {
   /**
    * Serializes entities into a data array.
    */
-  public function serialize(EntityInterface $entity): array;
+  public function serialize(EntityInterface $entity, bool $initial_entity = TRUE): array;
 
   /**
    * Deserializes entity data back into an entity object.

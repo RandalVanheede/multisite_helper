@@ -18,12 +18,17 @@ interface EntityTypeInterface extends ContainerFactoryPluginInterface {
   public function label(): string;
 
   /**
-   * Imports the field value to the given entity.
+   * Imports the entity data.
    */
   public function import(array $data): bool|EntityInterface;
 
   /**
-   * Exports the field value from the given entity.
+   * Creates a stub entity for the given entity data.
+   */
+  public function importStub(array $data): bool|EntityInterface;
+
+  /**
+   * Exports entity to array data.
    */
   public function export(EntityInterface $entity): mixed;
 

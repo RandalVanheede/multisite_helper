@@ -28,12 +28,14 @@ abstract class FieldTypePluginBase extends PluginBase implements FieldTypeInterf
       return FALSE;
     }
 
+    unset($values['_field_type']);
     if ($delta) {
       $entity->get($field_name)->set($delta, $values);
     }
     else {
       $entity->set($field_name, $values);
     }
+
     return $entity;
   }
 
