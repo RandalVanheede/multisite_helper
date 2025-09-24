@@ -33,7 +33,7 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
     $row['subsite'] = $entity->label() . ' (' . $entity->id() . ')';
     $row['url'] = $entity->url();
     $row['status'] = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
-    $row['accessible'] = MultisiteHelper::ping($entity->url()) ? '✔' : '✖';
+    $row['accessible'] = MultisiteHelper::ping($entity->url(), $entity->authorization()) ? '✔' : '✖';
 
     $host = \Drupal::request()->getHttpHost();
     if (in_array($row['url'], [

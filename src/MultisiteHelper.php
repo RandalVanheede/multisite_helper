@@ -124,7 +124,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
     foreach ($sites as $site) {
       $headers = [];
       if ($auth = $site->authorization()) {
-        $headers['Authorization'] = 'Basic: ' . $auth;
+        $headers['Authorization'] = 'Basic ' . $auth;
       }
 
       $requests[$site->url()] = new Request(
@@ -199,7 +199,7 @@ class MultisiteHelper implements MultisiteHelperInterface {
   /**
    * {@inheritDoc}
    */
-  public static function ping(string $url): ?bool {
+  public static function ping(string $url, ?string $authorization = NULL): ?bool {
     if (!in_array('curl', get_loaded_extensions())) {
       return NULL;
     }
@@ -208,6 +208,11 @@ class MultisiteHelper implements MultisiteHelperInterface {
     curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    if ($authorization) {
+      curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Basic ' . $authorization,
+      ]);
+    }
     curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
