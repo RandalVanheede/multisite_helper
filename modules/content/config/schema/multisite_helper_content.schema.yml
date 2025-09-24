@@ -1,0 +1,6 @@
+multisite_helper.plugin.content_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    content_types:
+      type: sequence
+      label: 'Content types'

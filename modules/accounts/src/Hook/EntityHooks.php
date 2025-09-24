@@ -31,12 +31,12 @@ class EntityHooks {
   public function doSend(UserInterface $user, string $action): void {
     /** @var \Drupal\multisite_helper_accounts\Plugin\MultisiteHelperPlugin\AccountSync $plugin */
     $plugin = $this->pluginManager->getPlugin('account_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
+    if (!$plugin->isEnabled()) {
       return;
     }
 
     // Check if the user has any of the configured roles.
+    $plugin_config = $plugin->getConfiguration();
     $configured_roles = array_filter($plugin_config['roles']);
     if (!empty($configured_roles) && empty(array_intersect($user->getRoles(), $configured_roles))) {
       return;

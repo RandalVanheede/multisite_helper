@@ -86,20 +86,6 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
   /**
    * {@inheritDoc}
    */
-  public function allowProcessingMethodChoice(): bool {
-    return TRUE;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function getProcessingMethod(): string {
-    return $this->configuration['processing_method'] ?? static::DEFAULT_PROCESSING_METHOD;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   public function defaultConfiguration() {
     return array_filter([
       'enabled' => FALSE,
@@ -146,10 +132,14 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
   }
 
   /**
-   * Call this method to create a send job for this plugin with the necessary data.
-   *
-   * You can optionally provide an array of hostnames to which the data should
-   * be sent. If this is left empty, the data will be sent to all other sites.
+   * {@inheritDoc}
+   */
+  public function isEnabled(): bool {
+    return (bool) ($this->configuration['enabled'] ?? FALSE);
+  }
+
+  /**
+   * {@inheritDoc}
    */
   public function send(array $data, ?array $sites = NULL): bool {
     if (MultisiteHelper::isImporting()) {
@@ -168,10 +158,7 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
   }
 
   /**
-   * Call this method to create a remove job for this plugin with the necessary data.
-   *
-   * You can optionally provide an array of hostnames to which the data should
-   * be sent. If this is left empty, the data will be sent to all other sites.
+   * {@inheritDoc}
    */
   public function remove(array $data, ?array $sites = NULL): bool {
     if (MultisiteHelper::isImporting()) {
@@ -198,6 +185,20 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       'DELETE' => $this->helper->getEntityProcessor()->deleteEntity($data),
       default => FALSE,
     };
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function allowProcessingMethodChoice(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getProcessingMethod(): string {
+    return $this->configuration['processing_method'] ?? static::DEFAULT_PROCESSING_METHOD;
   }
 
 }

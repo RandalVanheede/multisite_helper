@@ -1,2 +1,3 @@
 enabled: true
 processing_method: cron
+content_types: {  }

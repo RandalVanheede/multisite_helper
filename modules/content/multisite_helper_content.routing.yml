@@ -5,3 +5,11 @@ multisite_helper_content.uuid_redirect:
     operation: null
   requirements:
     _custom_access: '\Drupal\multisite_helper_content\Controller\NodeUuidController::uuidAccess'
+
+multisite_helper_content.bundles:
+  path: '/api/multisite-helper/content/bundles'
+  defaults:
+    _controller: 'Drupal\multisite_helper_content\Controller\NodeBundleController::list'
+    _title: 'List of available node bundles'
+  requirements:
+    _custom_access: 'Drupal\multisite_helper_content\Controller\NodeBundleController::apiKeyAccess'

@@ -6,3 +6,4 @@ core_version_requirement: ^11.1
 configure: multisite_helper.settings
 dependencies:
   - multisite_helper:multisite_helper
+  - drupal:node
