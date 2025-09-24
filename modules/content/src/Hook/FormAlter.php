@@ -41,10 +41,11 @@ class FormAlter {
 
   #[Hook('form_node_form_alter')]
   public function nodeFormAlter(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $form_state->getFormObject()->getEntity();
     /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
     $plugin = $this->pluginManager->getPlugin('content_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
+    if (!$plugin->isEnabled() || !$plugin->isBundleAllowed($node->bundle())) {
       foreach (['mh_sync', 'mh_sites', 'mh_source', 'mh_sync_menu_link'] as $field_name) {
         if (isset($form[$field_name])) {
           $form[$field_name]['#access'] = FALSE;
@@ -192,8 +193,8 @@ class FormAlter {
       ]);
 
       $bundle_info = json_decode($request->getBody()->getContents(), TRUE);
-      // Cache the bundles for the next hour.
-      $this->cache->set(self::BUNDLE_CACHE_PREFIX . $subsite->id(), array_keys($bundle_info), time() + 3600);
+      // Cache the bundles for the half hour.
+      $this->cache->set(self::BUNDLE_CACHE_PREFIX . $subsite->id(), array_keys($bundle_info), time() + 1800);
 
       $cached_bundles = new \stdClass();
       $cached_bundles->data = array_keys($bundle_info);

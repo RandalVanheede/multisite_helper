@@ -22,8 +22,7 @@ class EntityHooks {
   public function save(NodeInterface $node): void {
     /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
     $plugin = $this->pluginManager->getPlugin('content_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
+    if (!$plugin->isEnabled() || !$plugin->isBundleAllowed($node->bundle())) {
       return;
     }
 
@@ -75,12 +74,13 @@ class EntityHooks {
   public function delete(NodeInterface $node): void {
     /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
     $plugin = $this->pluginManager->getPlugin('content_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
+    if (!$plugin->isEnabled() || !$plugin->isBundleAllowed($node->bundle())) {
       return;
     }
 
-    if (!$node->get('mh_sync')->value) {
+    // If sync is off, or the source subsite is not empty, only delete the node on
+    // the current subsite.
+    if (!$node->get('mh_sync')->value || !$node->get('mh_source')->isEmpty()) {
       return;
     }
 

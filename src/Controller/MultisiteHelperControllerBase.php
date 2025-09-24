@@ -7,12 +7,16 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 abstract class MultisiteHelperControllerBase extends ControllerBase {
 
-  public function __construct(ConfigFactoryInterface $configFactory) {
+  public function __construct(
+    ConfigFactoryInterface $configFactory,
+    protected readonly MultisiteHelperPluginManager $pluginManager,
+  ) {
     $this->configFactory = $configFactory;
   }
 
@@ -20,7 +24,10 @@ abstract class MultisiteHelperControllerBase extends ControllerBase {
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('config.factory'));
+    return new static(
+      $container->get('config.factory'),
+      $container->get('plugin.manager.multisite_helper_plugin'),
+    );
   }
 
   /**

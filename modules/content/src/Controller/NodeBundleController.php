@@ -24,7 +24,13 @@ class NodeBundleController extends MultisiteHelperControllerBase {
    * Returns a list of bundles.
    */
   public function list(): JsonResponse {
-    return new JsonResponse($this->bundleInfo->getBundleInfo('node'));
+    /** @var \Drupal\multisite_helper_content\Plugin\MultisiteHelperPlugin\ContentSync $plugin */
+    $plugin = $this->pluginManager->getPlugin('content_sync');
+    $bundle_info = $this->bundleInfo->getBundleInfo('node');
+    $bundle_info = array_filter($bundle_info, static function (string $bundle) use ($plugin) {
+      return $plugin->isBundleAllowed($bundle);
+    }, ARRAY_FILTER_USE_KEY);
+    return new JsonResponse($bundle_info);
   }
 
 }

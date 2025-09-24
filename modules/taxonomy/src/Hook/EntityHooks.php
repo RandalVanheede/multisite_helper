@@ -31,12 +31,12 @@ class EntityHooks {
   public function doSend(TermInterface $term, string $action): void {
     /** @var \Drupal\multisite_helper_taxonomy\Plugin\MultisiteHelperPlugin\TermSync $plugin */
     $plugin = $this->pluginManager->getPlugin('term_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
+    if (!$plugin->isEnabled()) {
       return;
     }
 
     // Check if the term is part of the configured vocabularies.
+    $plugin_config = $plugin->getConfiguration();
     $configured_vids = array_filter($plugin_config['vids']);
     if (!empty($configured_vids) && !in_array($term->bundle(), $configured_vids)) {
       return;

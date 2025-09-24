@@ -36,11 +36,11 @@ class EntityHooks {
 
     /** @var \Drupal\multisite_helper\Plugin\MultisiteHelperPlugin\ContentEntitySync $plugin */
     $plugin = $this->pluginManager->getPlugin('content_entity_sync');
-    $plugin_config = $plugin->getConfiguration();
-    if (empty($plugin_config['enabled'])) {
+    if (!$plugin->isEnabled()) {
       return;
     }
 
+    $plugin_config = $plugin->getConfiguration();
     if (!in_array($entity->getEntityTypeId(), $plugin_config['entity_types'])) {
       return;
     }

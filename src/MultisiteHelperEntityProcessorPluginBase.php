@@ -53,6 +53,7 @@ abstract class MultisiteHelperEntityProcessorPluginBase extends PluginBase imple
       'entity_type' => $data['entity_type'],
       'is_translation' => $data['is_translation'],
       'language' => $data['language'],
+      'bundle' => $data['bundle'] ?? $data['entity_type'],
     ];
   }
 
