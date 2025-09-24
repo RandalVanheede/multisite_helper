@@ -66,6 +66,7 @@ class MhSubsiteOverviewForm extends FormBase {
       ->sort('weight')
       ->execute();
     foreach ($subsite_ids as $subsite_id) {
+      /** @var \Drupal\multisite_helper\MhSubsiteInterface $entity */
       $entity = $storage->load($subsite_id);
       $form['table'][$entity->id()] = [
         'subsite' => ['#markup' => $entity->label() . ' (' . $entity->id() . ')'],
@@ -76,7 +77,7 @@ class MhSubsiteOverviewForm extends FormBase {
           '#title_display' => 'invisible',
           '#default_value' => $entity->status(),
         ],
-        'accessible' => ['#markup' => MultisiteHelper::ping($entity->url()) ? '✔' : '✖'],
+        'accessible' => ['#markup' => MultisiteHelper::ping($entity->url(), $entity->authorization()) ? '✔' : '✖'],
         'weight' => [
           '#type' => 'weight',
           '#delta' => count($subsite_ids),
