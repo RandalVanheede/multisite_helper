@@ -42,6 +42,16 @@ final class SingleContentSync extends MultisiteHelperEntityProcessorPluginBase {
    * {@inheritDoc}
    */
   public function importEntity(array $data): bool {
+    [
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+    ] = $data;
+
+    // If the bundle does not exist, don't import the entity.
+    if (!array_key_exists($bundle, $this->bundleInfo->getBundleInfo($entity_type))) {
+      return FALSE;
+    }
+
     $this->contentImporter->doImport($data);
     return TRUE;
   }

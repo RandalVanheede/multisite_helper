@@ -66,6 +66,16 @@ final class Basic extends MultisiteHelperEntityProcessorPluginBase {
    * {@inheritDoc}
    */
   public function importEntity(array $data): bool {
+    [
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+    ] = $data;
+
+    // If the bundle does not exist, don't import the entity.
+    if (!array_key_exists($bundle, $this->bundleInfo->getBundleInfo($entity_type))) {
+      return FALSE;
+    }
+
     $storage = $this->entityTypeManager->getStorage($data['entity_type']);
     $entity_type = $storage->getEntityType();
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
@@ -73,8 +83,8 @@ final class Basic extends MultisiteHelperEntityProcessorPluginBase {
       $init_data = [
         'uuid' => $data['uuid'],
       ];
-      if (!empty($data['bundle'])) {
-        $init_data[$entity_type->getKey('bundle')] = $data['bundle'];
+      if (!empty($bundle) && $entity_type->hasKey('bundle')) {
+        $init_data[$entity_type->getKey('bundle')] = $bundle;
       }
       $entity = $storage->create($init_data);
     }
