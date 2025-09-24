@@ -85,9 +85,7 @@ class EntityHooks {
     }
 
     // Calculate the sites list.
-    $sites = array_map(function (MhSubsiteInterface $subsite) {
-      return $subsite->url();
-    }, $node->get('mh_sites')->referencedEntities());
+    $sites = $node->get('mh_sites')->referencedEntities();
 
     // Grab the node values and add the custom mh_sync values.
     $extra_data['mh_sync'] = [['value' => 1]];
