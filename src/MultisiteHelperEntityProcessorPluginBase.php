@@ -6,6 +6,7 @@ namespace Drupal\multisite_helper;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -15,12 +16,15 @@ abstract class MultisiteHelperEntityProcessorPluginBase extends PluginBase imple
 
   protected EntityRepositoryInterface $entityRepository;
 
+  protected readonly EntityTypeBundleInfoInterface $bundleInfo;
+
   /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->entityRepository = $container->get('entity.repository');
+    $instance->bundleInfo = $container->get('entity_type.bundle.info');
     return $instance;
   }
 
