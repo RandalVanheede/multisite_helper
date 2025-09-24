@@ -54,8 +54,8 @@ final class ContentSync extends MultisiteHelperPluginBase {
 
     $form['content_types'] = [
       '#type' => 'checkboxes',
-      '#title' => $this->t('Vocabularies to synchronize'),
-      '#description' => $this->t('Select the content types that need to be synchronized, leave empty to synchronize content of all types.'),
+      '#title' => $this->t('Content types'),
+      '#description' => $this->t('Select the content types that are allowed to be synchronized, leave empty to allow synchronization of content of all types.'),
       '#default_value' => $this->configuration['content_types'],
       '#options' => $bundles,
       '#states' => [
