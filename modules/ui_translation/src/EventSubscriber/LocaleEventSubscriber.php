@@ -30,6 +30,9 @@ final readonly class LocaleEventSubscriber implements EventSubscriberInterface {
   public function saveTranslation(LocaleEvent $event): void {
     /** @var \Drupal\multisite_helper_ui_translation\Plugin\MultisiteHelperPlugin\UiTranslationSync $plugin */
     $plugin = $this->pluginManager->getPlugin('ui_translation_sync');
+    if (!$plugin->isEnabled()) {
+      return;
+    }
 
     foreach ($event->getLangCodes() as $langcode) {
       $translations = $this->stringStorage->getTranslations([
