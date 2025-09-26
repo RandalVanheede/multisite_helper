@@ -4,6 +4,7 @@ namespace Drupal\multisite_helper\Form;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -17,6 +18,7 @@ class MhSubsiteOverviewForm extends FormBase {
   public function __construct(
     private readonly ModuleHandlerInterface $moduleHandler,
     private readonly MultisiteHelperInterface $helper,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
@@ -26,6 +28,7 @@ class MhSubsiteOverviewForm extends FormBase {
     return new static(
       $container->get('module_handler'),
       $container->get('multisite_helper'),
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -59,7 +62,7 @@ class MhSubsiteOverviewForm extends FormBase {
       ],
     ];
 
-    $storage = \Drupal::entityTypeManager()->getStorage('mh_subsite');
+    $storage = $this->entityTypeManager->getStorage('mh_subsite');
     $subsite_ids = $storage
       ->getQuery()
       ->accessCheck(FALSE)
@@ -129,7 +132,7 @@ class MhSubsiteOverviewForm extends FormBase {
    * {@inheritDoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $storage = \Drupal::entityTypeManager()->getStorage('mh_subsite');
+    $storage = $this->entityTypeManager->getStorage('mh_subsite');
     $values = $form_state->getValues();
     foreach ($values['table'] as $subsite_id => $subsite_item) {
       $subsite = $storage->load($subsite_id);
