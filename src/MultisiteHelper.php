@@ -91,10 +91,10 @@ class MultisiteHelper implements MultisiteHelperInterface {
   public function getOtherSubsites(int $status = MhSubsite::ENABLED): array {
     $storage = $this->entityTypeManager->getStorage('mh_subsite');
 
-    $host = $this->requestStack->getCurrentRequest()->getHttpHost();
     $subsite_ids = $storage->getQuery()
+      ->accessCheck(FALSE)
       ->condition('status', $status)
-      ->condition('url', ['http://' . $host, 'https://' . $host], 'NOT IN')
+      ->condition('id', $this->getCurrentSiteId(), '<>')
       ->sort('weight')
       ->execute();
 

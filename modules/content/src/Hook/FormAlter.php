@@ -94,23 +94,14 @@ class FormAlter {
 
     // Don't allow deploying to the current subsite, and list the options by weight.
     $form['mh_sites']['widget']['#options'] = [];
-    $current_site = $this->helper->getCurrentSiteId();
-    $storage = $this->entityTypeManager->getStorage('mh_subsite');
-    $subsite_ids = $storage->getQuery()
-      ->accessCheck(FALSE)
-      ->condition('status', MhSubsite::ENABLED)
-      ->condition('id', $current_site, '<>')
-      ->sort('weight')
-      ->execute();
+    $subsites = $this->helper->getOtherSubsites();
 
-    foreach ($subsite_ids as $subsite_id) {
-      /** @var \Drupal\multisite_helper\MhSubsiteInterface $subsite */
-      $subsite = $storage->load($subsite_id);
-      $form['mh_sites']['widget']['#options'][$subsite_id] = $subsite->label();
+    foreach ($subsites as $subsite) {
+      $form['mh_sites']['widget']['#options'][$subsite->id()] = $subsite->label();
       if (!in_array($node->bundle(), $this->getBundlesForSite($subsite))) {
-        $form['mh_sites']['widget'][$subsite_id]['#description'] =
+        $form['mh_sites']['widget'][$subsite->id()]['#description'] =
           $this->t('The content type is disabled for this subsite.');
-        $form['mh_sites']['widget'][$subsite_id]['#disabled'] = TRUE;
+        $form['mh_sites']['widget'][$subsite->id()]['#disabled'] = TRUE;
       }
     }
 
