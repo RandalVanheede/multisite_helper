@@ -9,7 +9,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\locale\StringStorageInterface;
 use Drupal\multisite_helper\Attribute\MultisiteHelperPlugin;
 use Drupal\multisite_helper\MultisiteHelperPluginBase;
-use Drupal\taxonomy\VocabularyInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
