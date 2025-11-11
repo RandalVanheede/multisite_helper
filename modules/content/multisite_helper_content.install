@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\multisite_helper_content\Hook\EntityHooks;
+use Drupal\system\Entity\Action;
 
 /**
  * @file
@@ -21,5 +22,34 @@ function multisite_helper_content_install(): void {
       'node',
       $field_definition,
     );
+  }
+
+  /** @var \Drupal\multisite_helper\MultisiteHelperInterface $helper */
+  $helper = \Drupal::service('multisite_helper');
+  foreach ($helper->getOtherSubsites() as $subsite) {
+    // Create a new system action to send content to this subsite.
+    $action = Action::create([
+      'id' => 'mh_send_to_subsite.' . $subsite->id(),
+      'type' => 'node',
+      'plugin' => 'mh_send_to_subsite',
+      'label' => t('Send content to subsite: @subsite', [
+        '@subsite' => $subsite->label(),
+      ]),
+      'configuration' => [
+        'mh_subsite' => $subsite->id(),
+      ],
+    ]);
+    $action->save();
+  }
+}
+
+function multisite_helper_content_uninstall(): void {
+  \Drupal::configFactory()->getEditable('multisite_helper.plugin.content_sync')->delete();
+  $actions = \Drupal::entityTypeManager()
+    ->getStorage('action')
+    ->loadByProperties(['plugin' => 'mh_send_to_subsite']);
+
+  foreach ($actions as $action) {
+    $action->delete();
   }
 }

@@ -91,6 +91,8 @@ It's possible a more specific plugin exists for some entity types that provides 
         '#disabled' => TRUE,
         '#description' => $this->t('Specific plugin provided by module: @provider', ['@provider' => $provider]),
       ];
+      // Remove from active content types.
+      unset($form['entity_types']['#default_value'][$entity_type_id]);
     }
 
 

@@ -102,6 +102,10 @@ class FormAlter {
         $form['mh_sites']['widget'][$subsite->id()]['#description'] =
           $this->t('The content type is disabled for this subsite.');
         $form['mh_sites']['widget'][$subsite->id()]['#disabled'] = TRUE;
+        $subsite_delta = array_search($subsite->id(), $form['mh_sites']['widget']['#default_value']);
+        if ($subsite_delta !== FALSE) {
+          unset($form['mh_sites']['widget']['#default_value'][$subsite_delta]);
+        }
       }
     }
 

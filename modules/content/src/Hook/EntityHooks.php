@@ -5,12 +5,16 @@ namespace Drupal\multisite_helper_content\Hook;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\multisite_helper\MhSubsiteInterface;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Drupal\node\NodeInterface;
+use Drupal\system\Entity\Action;
 
-class EntityHooks {
+final class EntityHooks {
+
+  use StringTranslationTrait;
 
   public function __construct(
     private readonly MultisiteHelperPluginManager $pluginManager,
@@ -165,6 +169,31 @@ class EntityHooks {
       ->setDisplayConfigurable('view', FALSE);
 
     return $fields;
+  }
+
+  #[Hook('mh_subsite_insert')]
+  public function mhSubsiteInsert(MhSubsiteInterface $subsite): void {
+    // Create a new system action to send content to this subsite.
+    $action = Action::create([
+      'id' => 'mh_send_to_subsite.' . $subsite->id(),
+      'type' => 'node',
+      'plugin' => 'mh_send_to_subsite',
+      'label' => $this->t('Send content to subsite: @subsite', [
+        '@subsite' => $subsite->label(),
+      ]),
+      'configuration' => [
+        'mh_subsite' => $subsite->id(),
+      ],
+    ]);
+    $action->save();
+  }
+
+  #[Hook('mh_subsite_delete')]
+  public function mhSubsiteDelete(MhSubsiteInterface $subsite): void {
+    // Remove the system action.
+    if ($action = Action::load('mh_send_to_subsite.' . $subsite->id())) {
+      $action->delete();
+    }
   }
 
 }
