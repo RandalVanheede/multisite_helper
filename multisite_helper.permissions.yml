@@ -1,2 +1,5 @@
+administer multisite helper:
+  title: 'Administer multisite helper settings'
+
 administer mh_subsite:
   title: 'Administer multisite helper subsite'

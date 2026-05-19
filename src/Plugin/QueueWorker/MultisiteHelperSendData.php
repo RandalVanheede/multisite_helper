@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Plugin\QueueWorker;
 
 use Drupal\Core\Queue\Attribute\QueueWorker;
@@ -15,10 +17,7 @@ class MultisiteHelperSendData extends MultisiteHelperQueueWorkerBase {
    * {@inheritDoc}
    */
   public function processItem($data) {
-    assert(
-      isset($data['plugin_id'], $data['plugin_data'], $data['sites']),
-      'Not all required parameters for this queue worker are available.',
-    );
+    $this->validateData($data);
 
     $plugin_id = $data['plugin_id'];
     $plugin_data = $data['plugin_data'];

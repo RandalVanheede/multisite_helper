@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Event;
 
 final class MultisiteHelperEvents {

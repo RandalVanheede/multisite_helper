@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper_content\Hook;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -17,6 +19,8 @@ use Drupal\multisite_helper\Entity\MhSubsite;
 use Drupal\multisite_helper\MhSubsiteInterface;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Drupal\multisite_helper\MultisiteHelperPluginManager;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 
 class FormAlter {
@@ -35,6 +39,7 @@ class FormAlter {
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly ConfigFactoryInterface $configFactory,
     private readonly CacheBackendInterface $cache,
+    private readonly ClientInterface $httpClient,
   ) {
     $this->config = $this->configFactory->get('multisite_helper.settings');
   }
@@ -176,23 +181,32 @@ class FormAlter {
    */
   private function getBundlesForSite(MhSubsiteInterface $subsite): array {
     if (!$cached_bundles = $this->cache->get(self::BUNDLE_CACHE_PREFIX . $subsite->id())) {
-      $bundles_path = Url::fromRoute('multisite_helper_content.bundles')->toString();
+      try {
+        $bundles_path = Url::fromRoute('multisite_helper_content.bundles')->toString();
 
-      $request = \Drupal::httpClient()->get($subsite->url() . $bundles_path, [
-        RequestOptions::HEADERS => array_filter([
-          'X-Api-Key' => $this->config->get('api_key'),
-          'Authorization' => ($auth = $subsite->authorization())
-            ? 'Basic ' . $auth
-            : NULL,
-        ]),
-      ]);
+        $request = $this->httpClient->get($subsite->url() . $bundles_path, [
+          RequestOptions::HEADERS => array_filter([
+            'X-Api-Key' => $this->config->get('api_key'),
+            'Authorization' => ($auth = $subsite->authorization())
+              ? 'Basic ' . $auth
+              : NULL,
+          ]),
+          RequestOptions::TIMEOUT => 5,
+        ]);
 
-      $bundle_info = json_decode($request->getBody()->getContents(), TRUE);
-      // Cache the bundles for the half hour.
-      $this->cache->set(self::BUNDLE_CACHE_PREFIX . $subsite->id(), array_keys($bundle_info), time() + 1800);
+        $bundle_info = json_decode($request->getBody()->getContents(), TRUE);
+        if (!is_array($bundle_info)) {
+          return [];
+        }
+        // Cache the bundles for half an hour.
+        $this->cache->set(self::BUNDLE_CACHE_PREFIX . $subsite->id(), array_keys($bundle_info), time() + 1800);
 
-      $cached_bundles = new \stdClass();
-      $cached_bundles->data = array_keys($bundle_info);
+        $cached_bundles = new \stdClass();
+        $cached_bundles->data = array_keys($bundle_info);
+      }
+      catch (GuzzleException) {
+        return [];
+      }
     }
     return $cached_bundles->data;
   }

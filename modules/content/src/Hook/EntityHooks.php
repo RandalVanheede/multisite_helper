@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper_content\Hook;
 
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -63,7 +65,7 @@ final class EntityHooks {
     ];
     $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
     $node_values = $this->helper->getEntityProcessor()->exportEntity($node, $extra_data);
-    if (empty($extra_data['mh_sync_menu_link'][0]['value'])) {
+    if (empty($node_values['mh_sync_menu_link'][0]['value'])) {
       unset($node_values['menu_link']);
       unset($node_values['base_fields']['menu_link']);
       unset($node_values['fields']['menu_link']);
@@ -102,7 +104,7 @@ final class EntityHooks {
     ];
     $extra_data['mh_sync_menu_link'] = [['value' => $node->get('mh_sync_menu_link')->value]];
     $node_values = $this->helper->getEntityProcessor()->exportEntity($node, $extra_data);
-    if (empty($form_values['mh_sync_menu_link']['value'])) {
+    if (empty($node_values['mh_sync_menu_link'][0]['value'])) {
       unset($node_values['menu_link']);
       unset($node_values['base_fields']['menu_link']);
     }

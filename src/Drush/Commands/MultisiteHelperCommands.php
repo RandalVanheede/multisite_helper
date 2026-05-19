@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Drush\Commands;
 
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueWorkerManagerInterface;
 use Drupal\Core\Queue\SuspendQueueException;
-use Drupal\Core\State\StateInterface;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
@@ -21,7 +23,7 @@ final class MultisiteHelperCommands extends DrushCommands {
    * Constructs a MultisiteHelperCommands object.
    */
   public function __construct(
-    private readonly StateInterface $state,
+    private readonly LockBackendInterface $lock,
     private readonly QueueFactory $queueFactory,
     private readonly QueueWorkerManagerInterface $queueWorkerManager,
   ) {
@@ -33,16 +35,18 @@ final class MultisiteHelperCommands extends DrushCommands {
    */
   #[CLI\Command(name: 'multisite_helper:process-queue-items', aliases: ['mh:pqi'])]
   public function processItems() {
-    if ($this->state->get('multisite_helper.process_queue_items.running', FALSE)) {
-      $this->logger()->warning("The command mt_vehicle:force-queue is already running, can't run again.");
+    if (!$this->lock->acquire('multisite_helper_process_queue_items', 3600.0)) {
+      $this->logger()->warning("The command multisite_helper:process-queue-items is already running, can't run again.");
       return;
     }
-    $this->state->set('multisite_helper.process_queue_items.running', TRUE);
 
-    $this->processSendItems();
-    $this->processRemoveItems();
-
-    $this->state->set('multisite_helper.process_queue_items.running', FALSE);
+    try {
+      $this->processSendItems();
+      $this->processRemoveItems();
+    }
+    finally {
+      $this->lock->release('multisite_helper_process_queue_items');
+    }
   }
 
   /**
@@ -67,7 +71,9 @@ final class MultisiteHelperCommands extends DrushCommands {
         break;
       }
       catch (\Exception $e) {
-        $this->output()->writeln($e->getMessage());
+        $queue->releaseItem($item);
+        $this->logger()->error($e->getMessage());
+        $this->output()->writeln('Error processing item #' . $delta . ': ' . $e->getMessage());
       }
     }
     $this->output()->writeln('Done with "POST/PUT"-queue...' . PHP_EOL);
@@ -95,7 +101,9 @@ final class MultisiteHelperCommands extends DrushCommands {
         break;
       }
       catch (\Exception $e) {
-        $this->output()->writeln($e->getMessage());
+        $queue->releaseItem($item);
+        $this->logger()->error($e->getMessage());
+        $this->output()->writeln('Error processing item #' . $delta . ': ' . $e->getMessage());
       }
     }
     $this->output()->writeln('Done with "DELETE"-queue...');

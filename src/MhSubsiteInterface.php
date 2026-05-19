@@ -21,4 +21,16 @@ interface MhSubsiteInterface extends ConfigEntityInterface {
    */
   public function url(): ?string;
 
+  /**
+   * Returns the list of domain aliases for this subsite.
+   *
+   * @return string[]
+   */
+  public function aliases(): array;
+
+  /**
+   * Returns whether this is the default/fallback subsite.
+   */
+  public function isDefault(): bool;
+
 }

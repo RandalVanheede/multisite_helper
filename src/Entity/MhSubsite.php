@@ -54,6 +54,8 @@ use Drupal\multisite_helper\MhSubsiteListBuilder;
     'url',
     'weight',
     'authorization',
+    'aliases',
+    'is_default',
   ],
 )]
 final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
@@ -92,6 +94,18 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
   protected ?string $authorization = NULL;
 
   /**
+   * Domain aliases (additional hostnames that resolve to this subsite).
+   *
+   * @var string[]
+   */
+  protected array $aliases = [];
+
+  /**
+   * Whether this is the default/fallback subsite.
+   */
+  protected bool $is_default = FALSE;
+
+  /**
    * {@inheritDoc}
    */
   public function authorization(): ?string {
@@ -109,6 +123,20 @@ final class MhSubsite extends ConfigEntityBase implements MhSubsiteInterface {
       return $this->url;
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function aliases(): array {
+    return $this->aliases ?? [];
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function isDefault(): bool {
+    return (bool) ($this->is_default ?? FALSE);
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper_content\Plugin\Action;
 
 use Drupal\Core\Access\AccessResultInterface;

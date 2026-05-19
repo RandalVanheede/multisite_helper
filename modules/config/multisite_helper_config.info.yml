@@ -1,0 +1,7 @@
+name: 'Multisite Helper: Config sync'
+description: 'Synchronizes selected Drupal configuration objects between subsites.'
+type: module
+core_version_requirement: ^11
+package: Multisite Helper
+dependencies:
+  - drupal:multisite_helper

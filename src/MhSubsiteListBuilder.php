@@ -7,12 +7,37 @@ namespace Drupal\multisite_helper;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Render\Markup;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a listing of multisite helper subsites.
  */
 final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
+
+  public function __construct(
+    EntityTypeInterface $entity_type,
+    EntityStorageInterface $storage,
+    private readonly MultisiteHelperInterface $helper,
+    private readonly RequestStack $requestStack,
+  ) {
+    parent::__construct($entity_type, $storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): static {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('multisite_helper'),
+      $container->get('request_stack'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -33,10 +58,10 @@ final class MhSubsiteListBuilder extends ConfigEntityListBuilder {
     $row['subsite'] = $entity->label() . ' (' . $entity->id() . ')';
     $row['url'] = $entity->url();
     $row['status'] = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
-    $row['accessible'] = MultisiteHelper::ping($entity->url(), $entity->authorization()) ? '✔' : '✖';
+    $row['accessible'] = $this->helper->ping($entity->url(), $entity->authorization()) ? '✔' : '✖';
 
-    $host = \Drupal::request()->getHttpHost();
-    if (in_array($row['url'], [
+    $host = $this->requestStack->getCurrentRequest()?->getHttpHost();
+    if ($host !== null && in_array($row['url'], [
       'http://' . $host,
       'https://' . $host,
     ])) {

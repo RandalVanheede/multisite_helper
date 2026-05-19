@@ -50,3 +50,12 @@ multisite_helper.mh_subsite.*:
       type: string
     weight:
       type: integer
+    aliases:
+      type: sequence
+      label: 'Domain aliases'
+      sequence:
+        type: string
+        label: 'Alias URL'
+    is_default:
+      type: boolean
+      label: 'Default subsite'

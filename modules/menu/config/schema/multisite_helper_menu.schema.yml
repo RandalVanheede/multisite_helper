@@ -1,0 +1,9 @@
+multisite_helper.plugin.menu_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    menus:
+      type: sequence
+      label: 'Menus'
+      sequence:
+        type: string
+        label: 'Menu name'

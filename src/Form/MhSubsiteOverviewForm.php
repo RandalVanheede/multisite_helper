@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Form;
 
 use Drupal\Component\Serialization\Json;
@@ -9,7 +11,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\multisite_helper\MultisiteHelper;
 use Drupal\multisite_helper\MultisiteHelperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -80,7 +81,7 @@ class MhSubsiteOverviewForm extends FormBase {
           '#title_display' => 'invisible',
           '#default_value' => $entity->status(),
         ],
-        'accessible' => ['#markup' => MultisiteHelper::ping($entity->url(), $entity->authorization()) ? '✔' : '✖'],
+        'accessible' => ['#markup' => $this->helper->ping($entity->url(), $entity->authorization()) ? '✔' : '✖'],
         'weight' => [
           '#type' => 'weight',
           '#delta' => count($subsite_ids),
@@ -136,9 +137,9 @@ class MhSubsiteOverviewForm extends FormBase {
     $values = $form_state->getValues();
     foreach ($values['table'] as $subsite_id => $subsite_item) {
       $subsite = $storage->load($subsite_id);
-      foreach ($subsite_item as $field_name => $field_value) {
-        $subsite->set($field_name, $field_value);
-      }
+      // Only write the fields that are actually editable in this form.
+      $subsite->set('weight', $subsite_item['weight']);
+      $subsite->set('status', $subsite_item['status']);
       $subsite->save();
     }
   }

@@ -11,6 +11,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\multisite_helper\Attribute\MultisiteHelperPlugin;
 use Drupal\multisite_helper\MultisiteHelperPluginBase;
+use Drupal\multisite_helper\MultisiteHelperPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class ContentEntitySync extends MultisiteHelperPluginBase {
 
   private readonly EntityTypeManagerInterface $entityTypeManager;
+  private readonly MultisiteHelperPluginManager $pluginManager;
 
   /**
    * {@inheritDoc}
@@ -32,6 +34,7 @@ final class ContentEntitySync extends MultisiteHelperPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->pluginManager = $container->get('plugin.manager.multisite_helper_plugin');
     return $instance;
   }
 
@@ -77,8 +80,7 @@ It's possible a more specific plugin exists for some entity types that provides 
       ],
     ];
 
-    $plugin_manager = \Drupal::service('plugin.manager.multisite_helper_plugin');
-    $plugin_definitions = array_filter($plugin_manager->getDefinitions(), static function ($plugin_definition) {
+    $plugin_definitions = array_filter($this->pluginManager->getDefinitions(), static function ($plugin_definition) {
       return !empty($plugin_definition['handles_entity_type']);
     });
     $plugin_provided_entity_types = [];

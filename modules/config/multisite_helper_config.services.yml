@@ -1,0 +1,7 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  multisite_helper_config.config_event_subscriber:
+    class: Drupal\multisite_helper_config\EventSubscriber\ConfigEventSubscriber

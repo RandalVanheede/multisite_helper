@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Controller;
 
 use Drupal\Core\Access\AccessResult;
@@ -36,7 +38,10 @@ abstract class MultisiteHelperControllerBase extends ControllerBase {
   public function apiKeyAccess(AccountInterface $account, Request $request): AccessResultInterface {
     $api_key = $request->headers->get('x-api-key');
     $config = $this->config('multisite_helper.settings');
-    return AccessResult::allowedIf($api_key === $config->get('api_key'));
+    $configured_key = $config->get('api_key') ?? '';
+    return AccessResult::allowedIf(
+      !empty($api_key) && hash_equals($configured_key, $api_key)
+    )->addCacheableDependency($config)->setCacheMaxAge(0);
   }
 
 }

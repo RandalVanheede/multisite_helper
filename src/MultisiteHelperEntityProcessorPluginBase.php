@@ -61,13 +61,25 @@ abstract class MultisiteHelperEntityProcessorPluginBase extends PluginBase imple
    * {@inheritDoc}
    */
   public function deleteEntity(array $data): bool {
-    [
-      'entity_type' => $entity_type,
-      'uuid' => $uuid,
-    ] = $this->getEntityBaseInformation($data);
+    $info = $this->getEntityBaseInformation($data);
+    $entity = $this->entityRepository->loadEntityByUuid($info['entity_type'], $info['uuid']);
 
-    $entity = $this->entityRepository->loadEntityByUuid($entity_type, $uuid);
-    return (bool) $entity?->delete();
+    if ($entity === NULL) {
+      return FALSE;
+    }
+
+    // If this is a translation deletion, only remove the specific translation.
+    if (!empty($info['is_translation']) && !empty($info['language'])) {
+      $langcode = $info['language'];
+      if ($entity->hasTranslation($langcode)) {
+        $entity->removeTranslation($langcode);
+        $entity->save();
+        return TRUE;
+      }
+      return FALSE;
+    }
+
+    return (bool) $entity->delete();
   }
 
 }

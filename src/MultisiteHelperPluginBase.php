@@ -7,7 +7,7 @@ namespace Drupal\multisite_helper;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Queue\QueueFactory;
+
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\multisite_helper\Plugin\PluginFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -37,7 +37,6 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    protected QueueFactory $queueFactory,
     protected MultisiteHelperInterface $helper,
     protected EntityRepositoryInterface $entityRepository,
     protected MultisiteHelperProcessingMethodPluginManager $processingMethodPluginManager,
@@ -54,7 +53,6 @@ abstract class MultisiteHelperPluginBase extends PluginBase implements Multisite
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('queue'),
       $container->get('multisite_helper'),
       $container->get('entity.repository'),
       $container->get('plugin.manager.multisite_helper_processing_method'),

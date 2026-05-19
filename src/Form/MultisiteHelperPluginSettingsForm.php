@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
@@ -102,6 +104,7 @@ class MultisiteHelperPluginSettingsForm extends ConfigFormBase {
     parent::validateForm($form, $form_state);
 
     $definitions = $this->pluginManager->getDefinitions();
+    $values = $form_state->getValues();
     foreach ($definitions as $plugin_id => $plugin_definition) {
       $plugin_values = $values['plugins'][$plugin_id] ?? [];
       $plugin_values += $this->configFactory()->get('multisite_helper.plugin.' . $plugin_id)->getRawData() ?? [];

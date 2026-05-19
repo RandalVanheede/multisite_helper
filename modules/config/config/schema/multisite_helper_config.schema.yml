@@ -1,0 +1,9 @@
+multisite_helper.plugin.config_sync:
+  type: 'multisite_helper.plugin.*'
+  mapping:
+    config_names:
+      type: sequence
+      label: 'Configuration names'
+      sequence:
+        type: string
+        label: 'Config name'

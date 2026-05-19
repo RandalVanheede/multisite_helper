@@ -6,3 +6,4 @@ services:
   Drupal\multisite_helper_content\Hook\FormAlter:
     arguments:
       $cache: '@cache.default'
+      $httpClient: '@http_client'

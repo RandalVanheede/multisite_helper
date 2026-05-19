@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\EventSubscriber;
 
 use Drupal\single_content_sync\Event\ImportEvent;

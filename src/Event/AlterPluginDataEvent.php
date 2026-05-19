@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Event;
 
-use Drupal\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * @see \Drupal\multisite_helper\Event\MultisiteHelperEvents::ALTER_PLUGIN_DATA

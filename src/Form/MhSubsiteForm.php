@@ -57,6 +57,21 @@ final class MhSubsiteForm extends EntityForm {
       '#required' => TRUE,
     ];
 
+    $form['aliases'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Domain aliases'),
+      '#description' => $this->t('Additional hostnames that resolve to this subsite, one per line. Include the scheme (e.g. <code>https://www.example.com</code>).'),
+      '#default_value' => implode("\n", $this->entity->aliases()),
+      '#rows' => 3,
+    ];
+
+    $form['is_default'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Default subsite'),
+      '#description' => $this->t('Use this subsite as the fallback when no hostname matches. Only one subsite should be marked as default.'),
+      '#default_value' => $this->entity->isDefault(),
+    ];
+
     $authorization_string = $this->entity->get('authorization') ?: NULL;
     if (!empty($authorization_string) && str_contains($authorization_string, ':')) {
       [$user, $pass] = explode(':', $authorization_string, 2);
@@ -75,7 +90,7 @@ final class MhSubsiteForm extends EntityForm {
     ];
 
     $form['authorization']['pass'] = [
-      '#type' => 'textfield',
+      '#type' => 'password',
       '#title' => $this->t('Password'),
       '#default_value' => $pass ?? NULL,
     ];
@@ -104,14 +119,13 @@ final class MhSubsiteForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state): int {
+    // Convert aliases textarea (newline-separated) to an array.
+    $aliases_raw = $form_state->getValue('aliases', '');
+    $aliases = array_filter(array_map('trim', explode("\n", $aliases_raw)));
+    $form_state->setValue('aliases', array_values($aliases));
+
     $result = parent::save($form, $form_state);
-    $message_args = ['%label' => $this->entity->label()];
-    $this->messenger()->addStatus(
-      match($result) {
-        \SAVED_NEW => $this->t('Created new example %label.', $message_args),
-        \SAVED_UPDATED => $this->t('Updated example %label.', $message_args),
-      }
-    );
+    $this->messenger()->addStatus($this->t('The subsite has been saved.'));
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
     return $result;
   }

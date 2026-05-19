@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper\Hook;
 
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -43,6 +45,19 @@ class EntityHooks {
     $plugin_config = $plugin->getConfiguration();
     if (!in_array($entity->getEntityTypeId(), $plugin_config['entity_types'])) {
       return;
+    }
+
+    // Skip entity types that are handled by a more specific plugin to prevent
+    // double-syncing the same entity.
+    $definitions = $this->pluginManager->getDefinitions();
+    foreach ($definitions as $definition) {
+      if (!empty($definition['handles_entity_type'])
+        && $definition['handles_entity_type'] === $entity->getEntityTypeId()) {
+        $specific_plugin = $this->pluginManager->getPlugin($definition['id']);
+        if ($specific_plugin->isEnabled()) {
+          return;
+        }
+      }
     }
 
     $entity_values = $this->helper->getEntityProcessor()->exportEntity($entity);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper_taxonomy\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;

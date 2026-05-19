@@ -1,0 +1,9 @@
+name: 'Multisite Helper - Menu'
+description: 'Synchronizes menu link content entities between subsites.'
+package: 'Multisite'
+type: module
+core_version_requirement: ^11.1
+configure: multisite_helper.settings
+dependencies:
+  - multisite_helper:multisite_helper
+  - drupal:menu_link_content

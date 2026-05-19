@@ -1,0 +1,7 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  multisite_helper_menu.entity_hooks:
+    class: Drupal\multisite_helper_menu\Hook\EntityHooks

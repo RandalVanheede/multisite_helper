@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -41,7 +42,6 @@ class MultisiteHelper implements MultisiteHelperInterface {
    * Construct the multisite helper class.
    */
   public function __construct(
-    private readonly ModuleHandlerInterface $moduleHandler,
     private readonly LoggerChannelFactoryInterface $loggerChannelFactory,
     private readonly MessengerInterface $messenger,
     private readonly ClientInterface $httpClient,
@@ -59,9 +59,13 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   public function getCurrentSite(): ?MhSubsiteInterface {
     if (empty(static::$currentSubsite)) {
-      $host = $this->requestStack->getCurrentRequest()->getHttpHost();
+      $request = $this->requestStack->getCurrentRequest();
+      if ($request === NULL) {
+        return NULL;
+      }
+      $host = $request->getHttpHost();
 
-      // Find subsites with http and https.
+      // Find subsites matching the primary URL (http and https variants).
       $subsites = $this->entityTypeManager
         ->getStorage('mh_subsite')
         ->loadByProperties([
@@ -71,8 +75,35 @@ class MultisiteHelper implements MultisiteHelperInterface {
           ],
         ]);
 
-      // Assign the first result as the current subsite.
-      static::$currentSubsite = reset($subsites) ?: NULL;
+      if ($subsites) {
+        static::$currentSubsite = reset($subsites);
+      }
+      else {
+        // Fall back to checking aliases across all subsites.
+        $all_subsites = $this->entityTypeManager
+          ->getStorage('mh_subsite')
+          ->loadMultiple();
+
+        foreach ($all_subsites as $subsite) {
+          foreach ($subsite->aliases() as $alias) {
+            $alias = rtrim($alias, '/');
+            if ($alias === 'http://' . $host || $alias === 'https://' . $host) {
+              static::$currentSubsite = $subsite;
+              break 2;
+            }
+          }
+        }
+
+        // If still no match, use the default subsite as fallback.
+        if (empty(static::$currentSubsite)) {
+          foreach ($all_subsites as $subsite) {
+            if ($subsite->isDefault()) {
+              static::$currentSubsite = $subsite;
+              break;
+            }
+          }
+        }
+      }
     }
 
     return static::$currentSubsite;
@@ -91,14 +122,17 @@ class MultisiteHelper implements MultisiteHelperInterface {
   public function getOtherSubsites(int $status = MhSubsite::ENABLED): array {
     $storage = $this->entityTypeManager->getStorage('mh_subsite');
 
-    $subsite_ids = $storage->getQuery()
+    $query = $storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('status', $status)
-      ->condition('id', $this->getCurrentSiteId(), '<>')
-      ->sort('weight')
-      ->execute();
+      ->sort('weight');
 
-    return $storage->loadMultiple($subsite_ids);
+    // Only exclude the current site when we can identify it.
+    if ($currentId = $this->getCurrentSiteId()) {
+      $query->condition('id', $currentId, '<>');
+    }
+
+    return $storage->loadMultiple($query->execute());
   }
 
   /**
@@ -106,10 +140,11 @@ class MultisiteHelper implements MultisiteHelperInterface {
    */
   public function sendToSites(string $method, string $plugin_id, array $data, array $sites): bool {
     // Force remove the current site from the list of sites.
-    $host = $this->requestStack->getCurrentRequest()->getHttpHost();
-    if (($current_site_delta = array_search('http://' . $host, $sites))
-      || $current_site_delta = array_search('https://' . $host, $sites)) {
-      unset($sites[$current_site_delta]);
+    $currentSiteId = $this->getCurrentSiteId();
+    if ($currentSiteId) {
+      $sites = array_filter($sites, static function (MhSubsiteInterface $site) use ($currentSiteId) {
+        return $site->id() !== $currentSiteId;
+      });
     }
 
     // Allow the plugin data and sites array to be altered.
@@ -145,11 +180,12 @@ class MultisiteHelper implements MultisiteHelperInterface {
       $pool = new Pool($this->httpClient, $requests, [
         'concurrency' => $this->config->get('concurrent_calls') ?: 5,
         'fulfilled' => function (ResponseInterface $response, $index) {},
-        'rejected' => function (RequestException $reason, $index) use ($logger) {
+        'rejected' => function (RequestException $reason, $index) use ($logger, &$result) {
           // Log a user friendly message.
           $this->messenger->addError('Something went wrong while syncing data to subsite.');
           // Then log debugging data.
           $logger->debug($reason->getMessage());
+          $result = FALSE;
         },
       ]);
 
@@ -199,25 +235,26 @@ class MultisiteHelper implements MultisiteHelperInterface {
   /**
    * {@inheritDoc}
    */
-  public static function ping(string $url, ?string $authorization = NULL): ?bool {
-    if (!in_array('curl', get_loaded_extensions())) {
-      return NULL;
-    }
+  public function ping(string $url, ?string $authorization = NULL): bool {
+    try {
+      $headers = [];
+      if ($authorization) {
+        $headers['Authorization'] = 'Basic ' . $authorization;
+      }
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    if ($authorization) {
-      curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Basic ' . $authorization,
+      $response = $this->httpClient->request('GET', $url, [
+        'timeout' => 5,
+        'connect_timeout' => 5,
+        'headers' => $headers,
+        'http_errors' => FALSE,
       ]);
-    }
-    curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
 
-    return $http_code >= 200 && $http_code < 400;
+      $http_code = $response->getStatusCode();
+      return $http_code >= 200 && $http_code < 400;
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
   }
 
 }

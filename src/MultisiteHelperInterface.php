@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\multisite_helper;
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\multisite_helper\Entity\MhSubsite;
 
 interface MultisiteHelperInterface {
 
@@ -17,9 +22,12 @@ interface MultisiteHelperInterface {
   /**
    * Retrieves the other subsites' hostnames.
    *
+   * @param int $status
+   *   The status to filter by.
+   *
    * @return \Drupal\multisite_helper\MhSubsiteInterface[]
    */
-  public function getOtherSubsites(): array;
+  public function getOtherSubsites(int $status = MhSubsite::ENABLED): array;
 
   /**
    * Sends data to the given set of sites.
@@ -43,7 +51,15 @@ interface MultisiteHelperInterface {
 
   /**
    * Ping a subsite's URL.
+   *
+   * @param string $url
+   *   The URL to ping.
+   * @param string|null $authorization
+   *   Optional base64-encoded authorization string.
+   *
+   * @return bool
+   *   TRUE if the subsite is accessible, FALSE otherwise.
    */
-  public static function ping(string $url): ?bool;
+  public function ping(string $url, ?string $authorization = NULL): bool;
 
 }

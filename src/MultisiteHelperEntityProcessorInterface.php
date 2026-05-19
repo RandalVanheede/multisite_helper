@@ -34,8 +34,16 @@ interface MultisiteHelperEntityProcessorInterface extends ContainerFactoryPlugin
 
   /**
    * Export an entity to array data.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to export.
+   * @param array $extra_data
+   *   Optional extra data to merge into the export.
+   *
+   * @return array
+   *   The exported entity data.
    */
-  public function exportEntity(ContentEntityInterface $entity): array;
+  public function exportEntity(ContentEntityInterface $entity, array $extra_data = []): array;
 
   /**
    * Remove an entity that has been imported before by its exported data.
